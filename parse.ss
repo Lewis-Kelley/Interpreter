@@ -6,6 +6,7 @@
 (define 1st car)
 (define 2nd cadr)
 (define 3rd caddr)
+(define 4th cadddr)
 
 ;; Check to see if the given pair is a valid variable definition
 (define var-def-pair?

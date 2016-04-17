@@ -9,8 +9,6 @@
 
 (define eval-exp
   (lambda (exp env)
-    (display (list (cadr env) (caddr env)))
-    (newline)
     (cases expression exp
            [lit-exp (datum) datum]
            [quote-exp (datum) (2nd datum)]
@@ -21,18 +19,29 @@
                                                       "variable not found in environment: ~s"
                                                       id)))]
            [if-else-exp (test t-exp f-exp)
-                        (if ((eval-exp test env))
+                        (if (eval-exp test env)
                             (eval-exp t-exp env)
                             (eval-exp f-exp env))]
            [if-exp (test t-exp)
-                        (if ((eval-exp test env))
-                            (eval-exp t-exp env))]
+                   (if (eval-exp test env)
+                       (eval-exp t-exp env))]
            [app-exp (rator rands)
                     (let ([proc-value (eval-exp rator env)]
                           [args (eval-rands rands env)])
                       (apply-proc proc-value args))]
-            [lambda-exp (pars body)
-                    (closure pars body env)]
+           [lambda-exp (pars body)
+                       (closure pars body env)]
+           [let-exp (vars body)
+                    (let ((env (extend-env (map 1st vars) (map (lambda (exp)
+                                                                 (eval-exp exp env))
+                                                               (map 2nd vars))
+                                           env)))
+                      (let loop ((ls body))
+                        (if (null? (cdr ls))
+                            (eval-exp (1st ls) env)
+                            (begin
+                              (eval-exp (1st ls) env)
+                              (loop (cdr ls))))))]
            [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
                                         ; evaluate the list of operands, putting results into a list
@@ -50,14 +59,14 @@
     (cases proc-val proc-value
            [prim-proc (op) (apply-prim-proc op args)]
                                         ; You will add other cases
-            [closure (pars body env)
-              (let ((env (extend-env pars args env)))
-              (let loop ((ls body))
-                (if (not (null? (cdr ls)))
-                    (begin (eval-exp (car ls) env) (loop (cdr ls)))
-                    (eval-exp (car ls) env))
-                  ))]
-              
+           [closure (pars body env)
+                    (let ((env (extend-env pars args env)))
+                      (let loop ((ls body))
+                        (if (not (null? (cdr ls)))
+                            (begin (eval-exp (car ls) env) (loop (cdr ls)))
+                            (eval-exp (car ls) env))
+                        ))]
+           
            [else (error 'apply-proc
                         "Attempt to apply bad procedure: ~s"
                         proc-value)])))
@@ -68,7 +77,7 @@
                               vector make-vector vector-ref vector? number? symbol?
                               set-car! set-cdr! vector-set! display newline
                               caar cadr cdar cddr caaar caadr cadar cdaar
-                              caddr cdadr cddar cdddr))
+                              caddr cdadr cddar cdddr exit))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
