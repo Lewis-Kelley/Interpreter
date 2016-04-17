@@ -16,7 +16,7 @@
 
                                         ; lit-exp
      ((or (number? datum) (vector? datum) (string? datum) (null? datum)
-          (boolean? datum))
+          (boolean? datum)) ;(and (pair? datum) (or (equal? (car datum) 'quote) (equal? #\' (string-ref 0 (list->string datum))))))
       (lit-exp datum))
      ((pair? datum)
       (cond
