@@ -7,6 +7,45 @@
 (define 2nd cadr)
 (define 3rd caddr)
 
+;; Check to see if the given pair is a valid variable definition
+(define var-def-pair?
+  (lambda (pair)
+    (and (symbol? (1st pair))
+         (pair? (cdr pair))
+         (expression? (parse-exp (2nd pair)))
+         (null? (cddr pair)))))
+
+;; Check if the list is an improper list
+(define improper-list?
+  (lambda (ls)
+    (and (pair? ls)
+         (cond
+          ((null? (cdr ls))
+           #f)
+          ((not (pair? (cdr ls)))
+           #t)
+          (else
+           (improper-list? (cdr ls)))))))
+
+(define improper-list-of-symbols?
+  (lambda (ls)
+    (cond
+     ((symbol? ls)
+      #t)
+     ((pair? ls)
+      (and (symbol? (car ls))
+           (improper-list-of-symbols? (cdr ls))))
+     (else
+      #f))))
+
+;; Returns a function that executes the function only on the second element in a pair
+;; (for use with let expressions)
+(define op-on-2nd
+  (lambda (func)
+    (lambda (pair)
+      (list (1st pair)
+            (func (2nd pair))))))
+
 (define parse-exp
   (lambda (datum)
     (cond
