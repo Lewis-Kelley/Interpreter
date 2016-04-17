@@ -11,12 +11,20 @@
   (lambda (exp)
     (cases expression exp
            [lit-exp (datum) datum]
+           [quote-exp (datum) (2nd datum)]
            [var-exp (id)
                     (apply-env init-env id; look up its value.
                                (lambda (x) x) ; procedure to call if id is in the environment
                                (lambda () (eopl:error 'apply-env ; procedure to call if id not in env
                                                       "variable not found in environment: ~s"
                                                       id)))]
+           [if-else-exp (test t-exp f-exp)
+                        (if (test)
+                            t-exp
+                            f-exp)]
+           [if-exp (test t-exp)
+                        (if (test)
+                            t-exp)]
            [app-exp (rator rands)
                     (let ([proc-value (eval-exp rator)]
                           [args (eval-rands rands)])
