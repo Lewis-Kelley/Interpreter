@@ -48,15 +48,19 @@
 
 (define parse-exp
   (lambda (datum)
+    (display datum)
+    (newline)
     (cond
                                         ; var-exp
      ((symbol? datum)
       (var-exp datum))
 
                                         ; lit-exp
-     ((or (number? datum) (vector? datum) (string? datum) (null? datum)
-          (boolean? datum)) ;(and (pair? datum) (or (equal? (car datum) 'quote) (equal? #\' (string-ref 0 (list->string datum))))))
+     ((or (number? datum) (string? datum) (null? datum)
+          (boolean? datum) ) ;(equal? #\' (string-ref 0 (list->string datum))))))
       (lit-exp datum))
+     ((and (pair? datum) (equal? (car datum) 'quote))
+        (quote-exp datum))
      ((pair? datum)
       (cond
 
