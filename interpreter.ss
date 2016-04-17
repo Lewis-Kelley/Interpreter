@@ -1,72 +1,85 @@
-; top-level-eval evaluates a form in the global environment
+                                        ; top-level-eval evaluates a form in the global environment
 
 (define top-level-eval
   (lambda (form)
-    ; later we may add things that are not expressions.
+                                        ; later we may add things that are not expressions.
     (eval-exp form)))
 
-; eval-exp is the main component of the interpreter
+                                        ; eval-exp is the main component of the interpreter
 
 (define eval-exp
   (lambda (exp)
     (cases expression exp
-      [lit-exp (datum) datum]
-      [var-exp (id)
-        (apply-env init-env id; look up its value.
-           (lambda (x) x) ; procedure to call if id is in the environment
-           (lambda () (eopl:error 'apply-env ; procedure to call if id not in env
-              "variable not found in environment: ~s"
-         id)))]
-      [app-exp (rator rands)
-        (let ([proc-value (eval-exp rator)]
-              [args (eval-rands rands)])
-          (apply-proc proc-value args))]
-      [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
+           [lit-exp (datum) datum]
+           [var-exp (id)
+                    (apply-env init-env id; look up its value.
+                               (lambda (x) x) ; procedure to call if id is in the environment
+                               (lambda () (eopl:error 'apply-env ; procedure to call if id not in env
+                                                      "variable not found in environment: ~s"
+                                                      id)))]
+           [app-exp (rator rands)
+                    (let ([proc-value (eval-exp rator)]
+                          [args (eval-rands rands)])
+                      (apply-proc proc-value args))]
+           [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
-; evaluate the list of operands, putting results into a list
+                                        ; evaluate the list of operands, putting results into a list
 
 (define eval-rands
   (lambda (rands)
     (map eval-exp rands)))
 
-;  Apply a procedure to its arguments.
-;  At this point, we only have primitive procedures.
-;  User-defined procedures will be added later.
+                                        ;  Apply a procedure to its arguments.
+                                        ;  At this point, we only have primitive procedures.
+                                        ;  User-defined procedures will be added later.
 
 (define apply-proc
   (lambda (proc-value args)
     (cases proc-val proc-value
-      [prim-proc (op) (apply-prim-proc op args)]
-      ; You will add other cases
-      [else (error 'apply-proc
-                   "Attempt to apply bad procedure: ~s"
-                    proc-value)])))
+           [prim-proc (op) (apply-prim-proc op args)]
+                                        ; You will add other cases
+           [else (error 'apply-proc
+                        "Attempt to apply bad procedure: ~s"
+                        proc-value)])))
 
-(define *prim-proc-names* '(+ - * add1 sub1 cons =))
+(define *prim-proc-names* '(+ - * / add1 sub1 zero? not = < > <= >= cons car
+                              cdr list null? assq eq? equal? atom? length
+                              list->vector list? pair? procedure? vector->list
+                              vector make-vector vector-ref vector? number? symbol?
+                              set-car! set-cdr! vector-set! display newline
+                              caar cadr cdar cddr caaar caadr cadar cdaar
+                              caddr cdadr cddar cdddr))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
-     *prim-proc-names*   ;  a value (not an expression) with an identifier.
-     (map prim-proc
-          *prim-proc-names*)
-     (empty-env)))
+   *prim-proc-names*   ;  a value (not an expression) with an identifier.
+   (map prim-proc
+        *prim-proc-names*)
+   (empty-env)))
 
-; Usually an interpreter must define each
-; built-in procedure individually.  We are "cheating" a little bit.
+                                        ; Usually an interpreter must define each
+                                        ; built-in procedure individually.  We are "cheating" a little bit.
 
-(define apply-prim-proc
+(define apply-prim-proc ;;TODO Complete for all the listed prim-procs above
   (lambda (prim-proc args)
     (case prim-proc
-      [(+) (+ (1st args) (2nd args))]
-      [(-) (- (1st args) (2nd args))]
-      [(*) (* (1st args) (2nd args))]
-      [(add1) (+ (1st args) 1)]
+      [(+) (apply + args)]
+      [(-) (apply - args)]
+      [(*) (apply * args)]
+      [(/) (apply / args)]
+      [(add1)
+       (if (or (null? args) (not (null? (cdr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to add1: ~s" args)
+           (+ (1st args) 1))]
       [(sub1) (- (1st args) 1)]
-      [(cons) (cons (1st args) (2nd args))]
+      [(zero?) (zero? args)]
+      [(not) (not args)]
       [(=) (= (1st args) (2nd args))]
+      [(<) (< (1st args) )]
+      [(cons) (cons (1st args) (2nd args))]
       [else (error 'apply-prim-proc
-            "Bad primitive procedure name: ~s"
-            prim-op)])))
+                   "Bad primitive procedure name: ~s"
+                   prim-op)])))
 
 (define rep      ; "read-eval-print" loop.
   (lambda ()

@@ -15,7 +15,8 @@
       (var-exp datum))
 
                                         ; lit-exp
-     ((or (number? datum) (vector? datum) (string? datum) (null? datum))
+     ((or (number? datum) (vector? datum) (string? datum) (null? datum)
+          (boolean? datum))
       (lit-exp datum))
      ((pair? datum)
       (cond
