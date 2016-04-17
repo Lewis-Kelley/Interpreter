@@ -24,6 +24,8 @@
 
 (define apply-env
   (lambda (env sym succeed fail) ; succeed and fail are procedures applied if the var is or isn't found, respectively.
+    (display (list (cadr env) (caddr env)))
+    (newline)
     (cases environment env
       (empty-env-record ()
         (fail))

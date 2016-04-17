@@ -56,7 +56,11 @@
 
 (define-datatype proc-val proc-val?
   [prim-proc
-   (name symbol?)])
+   (name symbol?)]
+  [closure
+    (pars (list-of symbol?))
+    (body (list-of expression?))
+    (env environment?)])
 	 
 	 
 	 
@@ -72,3 +76,5 @@
    (syms (list-of symbol?))
    (vals (list-of scheme-value?))
    (env environment?)))
+
+
