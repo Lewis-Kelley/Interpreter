@@ -93,22 +93,87 @@
   (lambda (prim-proc args)
     (case prim-proc
       [(+) (apply + args)]
-      [(-) (apply - args)]
+      [(-)
+       (if (null? args)
+           (eopl:error 'apply-prim-proc "Invalid arguments to -: ~s" args)
+           (apply - args))]
       [(*) (apply * args)]
-      [(/) (apply / args)]
+      [(/)
+       (if (null? args)
+           (eopl:error 'apply-prim-proc "Invalid arguments to /: ~s" args)
+           (apply / args))]
       [(add1)
        (if (or (null? args) (not (null? (cdr args))))
            (eopl:error 'apply-prim-proc "Invalid arguments to add1: ~s" args)
            (+ (1st args) 1))]
-      [(sub1) (- (1st args) 1)]
-      [(zero?) (zero? args)]
-      [(not) (not args)]
-      [(=) (= (1st args) (2nd args))]
-      [(<) (< (1st args) )]
-      [(cons) (cons (1st args) (2nd args))]
-      [else (error 'apply-prim-proc
+      [(sub1)
+       (if (or (null? args) (not (null? (cdr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to sub1: ~s" args)
+           (- (1st args) 1))]
+      [(zero?)
+       (if (or (null? args) (not (null? (cdr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to zero: ~s" args)
+           (zero? (1st args)))]
+      [(not)
+       (if (or (null? args) (not (null? (cdr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to not: ~s" args)
+           (not (1st args)))]
+      [(=)
+       (if (null? args)
+           (eopl:error 'apply-prim-proc "Invalid arguments to =: ~s" args)
+           (apply = args))]
+      [(<)
+       (if (null? args)
+           (eopl:error 'apply-prim-proc "Invalid arguments to <: ~s" args)
+           (apply < args))]
+      [(<=)
+       (if (null? args)
+           (eopl:error 'apply-prim-proc "Invalid arguments to <=: ~s" args)
+           (apply <= args))]
+      [(>)
+       (if (null? args)
+           (eopl:error 'apply-prim-proc "Invalid arguments to >: ~s" args)
+           (apply > args))]
+      [(>=)
+       (if (null? args)
+           (eopl:error 'apply-prim-proc "Invalid arguments to >=: ~s" args)
+           (apply >= args))]
+      [(cons)
+       (if (or (null? args) (null? (cdr args)) (not (null? (cddr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to cons: ~s" args)
+           (cons (1st args) (2nd args)))]
+      [(car)
+       (if (or (null? args) (not (null? (cdr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to car: ~s" args)
+           (car args))]
+      [(cdr)
+       (if (or (null? args) (not (null? (cdr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to cdr: ~s" args)
+           (cdr args))]
+      [(list) (apply list args)]
+      [(null?)
+       (if (or (null? args) (not (null? (cdr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to null: ~s" args)
+           (null? (1st args)))]
+      [(assq)
+       (if (or (null? args) (null? (cdr args)) (null? (cddr args)) (not (null? (cdddr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to assq: ~s" args)
+           (assq (1st args) (2nd args)))]
+      [(eq?)
+       (if (or (null? args) (null? (cdr args)) (null? (cddr args)) (not (null? (cdddr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to eq?: ~s" args)
+           (eq? (1st args) (2nd args)))]
+      [(equal?)
+       (if (or (null? args) (null? (cdr args)) (null? (cddr args)) (not (null? (cdddr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to equal?: ~s" args)
+           (equal? (1st args) (2nd args)))]
+      [(atom?)
+       (if (or (null? args) (not (null? (cdr args))))
+           (eopl:error 'apply-prim-proc "Invalid arguments to atom?: ~s" args)
+           (atom? (1st args)))]
+      [else (eopl:error 'apply-prim-proc
                    "Bad primitive procedure name: ~s"
-                   prim-op)])))
+                   prim-proc)])))
 
 (define rep      ; "read-eval-print" loop.
   (lambda ()
