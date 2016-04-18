@@ -149,7 +149,10 @@
        [(list->vector) one-arg]
        [(list?) one-arg]
        [(pair?) one-arg]
-       [(procedure?) one-arg]
+       [(procedure?) (lambda (prim-proc args) ;; Effectively shadow procedure? with our proc-val?
+                       (if (or (null? args) (not (null? (cdr args))))
+                           (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
+                           (apply proc-val? args)))]
        [(vector->list) one-arg]
        [(vector) any-arg]
        [(make-vector) one-two-arg]
