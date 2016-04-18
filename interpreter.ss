@@ -77,7 +77,7 @@
                               vector make-vector vector-ref vector? number? symbol?
                               set-car! set-cdr! vector-set! display newline
                               caar cadr cdar cddr caaar caadr cadar cdaar
-                              caddr cdadr cddar cdddr exit))
+                              caddr cdadr cddar cdddr))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -89,91 +89,94 @@
                                         ; Usually an interpreter must define each
                                         ; built-in procedure individually.  We are "cheating" a little bit.
 
-(define apply-prim-proc ;;TODO Complete for all the listed prim-procs above
+(define arg-test
+  (lambda (pred?)
+    (lambda (sym args)
+      (if (not (pred? args))
+          (eopl:error 'apply-prim-proc "Invalid arguments to ~s: ~s" sym args)
+          (apply (eval sym) args)))))
+
+(define zero-arg
+  (arg-test (lambda (args) (null? args))))
+
+(define one-arg
+  (arg-test (lambda (args) (and (not (null? args)) (null? (cdr args))))))
+
+(define two-arg
+  (arg-test (lambda (args) (and (not (null? args)) (not (null? (cdr args))) (null? (cddr args))))))
+
+(define three-arg
+  (arg-test (lambda (args) (and (not (null? args)) (not (null? (cdr args))) (not (null? (cddr args)))
+                                (null? (cdddr args))))))
+
+(define one-two-arg
+  (arg-test (lambda (args) (and (not (null? args)) (or (null? (cdr args)) (null? (cddr args)))))))
+
+(define non-zero-arg
+  (arg-test (lambda (args) (not (null? args)))))
+
+(define zero-one-arg
+  (arg-test (lambda (args) (or (null? args) (null? (cdr args))))))
+
+(define any-arg (arg-test (lambda (args) #t)))
+
+(define apply-prim-proc
   (lambda (prim-proc args)
-    (case prim-proc
-      [(+) (apply + args)]
-      [(-)
-       (if (null? args)
-           (eopl:error 'apply-prim-proc "Invalid arguments to -: ~s" args)
-           (apply - args))]
-      [(*) (apply * args)]
-      [(/)
-       (if (null? args)
-           (eopl:error 'apply-prim-proc "Invalid arguments to /: ~s" args)
-           (apply / args))]
-      [(add1)
-       (if (or (null? args) (not (null? (cdr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to add1: ~s" args)
-           (+ (1st args) 1))]
-      [(sub1)
-       (if (or (null? args) (not (null? (cdr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to sub1: ~s" args)
-           (- (1st args) 1))]
-      [(zero?)
-       (if (or (null? args) (not (null? (cdr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to zero: ~s" args)
-           (zero? (1st args)))]
-      [(not)
-       (if (or (null? args) (not (null? (cdr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to not: ~s" args)
-           (not (1st args)))]
-      [(=)
-       (if (null? args)
-           (eopl:error 'apply-prim-proc "Invalid arguments to =: ~s" args)
-           (apply = args))]
-      [(<)
-       (if (null? args)
-           (eopl:error 'apply-prim-proc "Invalid arguments to <: ~s" args)
-           (apply < args))]
-      [(<=)
-       (if (null? args)
-           (eopl:error 'apply-prim-proc "Invalid arguments to <=: ~s" args)
-           (apply <= args))]
-      [(>)
-       (if (null? args)
-           (eopl:error 'apply-prim-proc "Invalid arguments to >: ~s" args)
-           (apply > args))]
-      [(>=)
-       (if (null? args)
-           (eopl:error 'apply-prim-proc "Invalid arguments to >=: ~s" args)
-           (apply >= args))]
-      [(cons)
-       (if (or (null? args) (null? (cdr args)) (not (null? (cddr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to cons: ~s" args)
-           (cons (1st args) (2nd args)))]
-      [(car)
-       (if (or (null? args) (not (null? (cdr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to car: ~s" args)
-           (car args))]
-      [(cdr)
-       (if (or (null? args) (not (null? (cdr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to cdr: ~s" args)
-           (cdr args))]
-      [(list) (apply list args)]
-      [(null?)
-       (if (or (null? args) (not (null? (cdr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to null: ~s" args)
-           (null? (1st args)))]
-      [(assq)
-       (if (or (null? args) (null? (cdr args)) (null? (cddr args)) (not (null? (cdddr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to assq: ~s" args)
-           (assq (1st args) (2nd args)))]
-      [(eq?)
-       (if (or (null? args) (null? (cdr args)) (null? (cddr args)) (not (null? (cdddr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to eq?: ~s" args)
-           (eq? (1st args) (2nd args)))]
-      [(equal?)
-       (if (or (null? args) (null? (cdr args)) (null? (cddr args)) (not (null? (cdddr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to equal?: ~s" args)
-           (equal? (1st args) (2nd args)))]
-      [(atom?)
-       (if (or (null? args) (not (null? (cdr args))))
-           (eopl:error 'apply-prim-proc "Invalid arguments to atom?: ~s" args)
-           (atom? (1st args)))]
-      [else (eopl:error 'apply-prim-proc
-                   "Bad primitive procedure name: ~s"
-                   prim-proc)])))
+    ((case prim-proc
+       [(+) any-arg]
+       [(-) non-zero-arg]
+       [(*) any-arg]
+       [(/) non-zero-arg]
+       [(add1) one-arg]
+       [(sub1) one-arg]
+       [(zero?) one-arg]
+       [(not) one-arg]
+       [(=) non-zero-arg]
+       [(<) non-zero-arg]
+       [(<=) non-zero-arg]
+       [(>) non-zero-arg]
+       [(>=) non-zero-arg]
+       [(cons) two-arg]
+       [(car) one-arg]
+       [(cdr) one-arg]
+       [(list) any-arg]
+       [(null?) one-arg]
+       [(assq) two-arg]
+       [(eq?) two-arg]
+       [(equal?) two-arg]
+       [(atom?) one-arg]
+       [(length) one-arg]
+       [(list->vector) one-arg]
+       [(list?) one-arg]
+       [(pair?) one-arg]
+       [(procedure?) one-arg]
+       [(vector->list) one-arg]
+       [(vector) any-arg]
+       [(make-vector) one-two-arg]
+       [(vector-ref) two-arg]
+       [(vector?) one-arg]
+       [(number?) one-arg]
+       [(symbol?) one-arg]
+       [(set-car!) two-arg]
+       [(set-cdr!) two-arg]
+       [(vector-set!) three-arg]
+       [(display) one-two-arg]
+       [(newline) zero-one-arg]
+       [(caar) one-arg]
+       [(cadr) one-arg]
+       [(cdar) one-arg]
+       [(cddr) one-arg]
+       [(caaar) one-arg]
+       [(caadr) one-arg]
+       [(cadar) one-arg]
+       [(cdaar) one-arg]
+       [(caddr) one-arg]
+       [(cdadr) one-arg]
+       [(caddr) one-arg]
+       [(cdddr) one-arg]
+       [else (eopl:error 'apply-prim-proc
+                         "Bad primitive procedure name: ~s"
+                         prim-proc)]) prim-proc args)))
 
 (define rep      ; "read-eval-print" loop.
   (lambda ()
