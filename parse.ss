@@ -1,8 +1,8 @@
-; This is a parser for simple Scheme expressions, such as those in EOPL, 3.1 thru 3.3.
+                                        ; This is a parser for simple Scheme expressions, such as those in EOPL, 3.1 thru 3.3.
 
-; You will want to replace this with your parser that includes more expression types, more options for these types, and error-checking.
+                                        ; You will want to replace this with your parser that includes more expression types, more options for these types, and error-checking.
 
-; Procedures to make the parser a little bit saner.
+                                        ; Procedures to make the parser a little bit saner.
 (define 1st car)
 (define 2nd cadr)
 (define 3rd caddr)
@@ -63,7 +63,24 @@
                                         ; quote-exp
        ((equal? (car datum) 'quote)
         (quote-exp datum))
-
+                                        ; begin-exp
+       ((equal? (car datum) 'begin)
+        (begin-exp (map parse-exp (cdr datum))))
+                                        ; cond-exp
+       ((equal? (car datum) 'cond)
+        (let ((tests (map 1st (cdr datum))) (bodies (map cdr (cdr datum))))
+          (if (equal? (car (reverse tests)) 'else)
+              (let ((rev-bodies (reverse bodies)))
+                (cond-exp (map parse-exp (reverse (cdr (reverse tests))))
+                          (map (lambda (body)
+                                 (map parse-exp body))
+                               (reverse (cdr rev-bodies)))
+                          (map parse-exp (car rev-bodies))))
+              (cond-exp (map parse-exp tests)
+                        (map (lambda (body)
+                               (map parse-exp body))
+                             bodies)
+                        '()))))
                                         ; set!-exp
        ((equal? (1st datum) 'set!)
 
@@ -85,8 +102,8 @@
         (if (null? (cdddr datum))
             (if-exp (parse-exp (2nd datum)) (parse-exp (3rd datum)))
             (if (not (null? (cddddr datum)))
-              (eopl:error 'parse-exp "*if-exp* incorrect length ~s" datum)
-              (if-else-exp (parse-exp (2nd datum)) (parse-exp (3rd datum)) (parse-exp (4th datum))))))
+                (eopl:error 'parse-exp "*if-exp* incorrect length ~s" datum)
+                (if-else-exp (parse-exp (2nd datum)) (parse-exp (3rd datum)) (parse-exp (4th datum))))))
                                         ;
                                         ; lambda's
                                         ;

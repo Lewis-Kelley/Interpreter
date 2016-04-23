@@ -12,6 +12,8 @@
     (cases expression exp
            [lit-exp (datum) datum]
            [quote-exp (datum) (2nd datum)]
+           [begin-exp (exps)
+                      (for-each (lambda (exp) (eval-exp exp env)) exps)]
            [var-exp (id)
                     (apply-env env id; look up its value.
                                (lambda (x) x) ; procedure to call if id is in the environment
@@ -36,17 +38,6 @@
                                  (list-closure pars body env)]
            [improper-pars-lambda-exp (pars body)
                                      (improper-list-closure pars body env)]
-           [let-exp (vars body)
-                    (let ((env (extend-env (map 1st vars) (map (lambda (exp)
-                                                                 (eval-exp exp env))
-                                                               (map 2nd vars))
-                                           env)))
-                      (let loop ((ls body))
-                        (if (null? (cdr ls))
-                            (eval-exp (1st ls) env)
-                            (begin
-                              (eval-exp (1st ls) env)
-                              (loop (cdr ls))))))]
            [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
                                         ; evaluate the list of operands, putting results into a list
@@ -234,10 +225,10 @@
   (lambda ()
     (display "--> ")
     ;; notice that we don't save changes to the environment...
-    (let ([answer (top-level-eval (parse-exp (read)))])
+    (let ([answer (top-level-eval (syntax-expand (parse-exp (read))))])
       ;; TODO are there answers that should display differently?
       (eopl:pretty-print answer) (newline)
       (rep))))  ; tail-recursive, so stack doesn't grow.
 
 (define eval-one-exp
-  (lambda (x) (top-level-eval (parse-exp x))))
+  (lambda (x) (top-level-eval (syntax-expand (parse-exp x)))))

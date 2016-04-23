@@ -39,6 +39,12 @@
    (test expression?)
    (true-exp expression?)
    (false-exp expression?))
+  (begin-exp
+   (exps (list-of expression?)))
+  (cond-exp
+   (tests (list-of expression?))
+   (bodies (list-of (list-of expression?)))
+   (else-body (list-of expression?)))
   (quote-exp
    (id (lambda (item)
          (and (pair? item)

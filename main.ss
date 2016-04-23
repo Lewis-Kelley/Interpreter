@@ -9,9 +9,11 @@
   (lambda ()
     (load "datatypes.ss")
     (load "parse.ss")
+    (load "syntax-expand.ss")
     (load "env.ss")
     (load "interpreter.ss")
-    (load "datatypes.ss")))
+    (load "datatypes.ss")
+    (load "interpreter-test.ss")))
 
 (load-all)
 
