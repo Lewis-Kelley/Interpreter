@@ -50,21 +50,29 @@
              (boolean? item)
              (null? item))))))
 
-	
-; datatype for procedures.  At first there is only one
-; kind of procedure, but more kinds will be added later.
+
+;; datatype for procedures.  At first there is only one
+;; kind of procedure, but more kinds will be added later.
 
 (define-datatype proc-val proc-val?
   [prim-proc
    (name symbol?)]
   [closure
-    (pars (list-of symbol?))
-    (body (list-of expression?))
-    (env environment?)])
-	 
-	 
-	 
-	
+   (pars (list-of symbol?))
+   (body (list-of expression?))
+   (env environment?)]
+  [list-closure
+   (pars symbol?)
+   (body (list-of expression?))
+   (env environment?)]
+  [improper-list-closure
+   (pars improper-list-of-symbols?)
+   (body (list-of expression?))
+   (env environment?)])
+
+
+
+
 ;; environment type definitions
 
 (define scheme-value?

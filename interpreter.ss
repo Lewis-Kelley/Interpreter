@@ -31,6 +31,10 @@
                       (apply-proc proc-value args))]
            [lambda-exp (pars body)
                        (closure pars body env)]
+           [list-pars-lambda-exp (pars body)
+                                 (list-closure pars body env)]
+           [improper-pars-lambda-exp (pars body)
+                                     (improper-list-closure pars body env)]
            [let-exp (vars body)
                     (let ((env (extend-env (map 1st vars) (map (lambda (exp)
                                                                  (eval-exp exp env))
@@ -54,6 +58,24 @@
                                         ;  At this point, we only have primitive procedures.
                                         ;  User-defined procedures will be added later.
 
+;; Converts an improper list to a proper list.
+;; WARNING: Does not check if the argument is actually improper.
+;;          This _will_ break!
+(define i-list->list
+  (lambda (i-list)
+    (if (pair? (cdr i-list))
+        (cons (car i-list) (i-list->list (cdr i-list)))
+        (list (car i-list) (cdr i-list)))))
+
+;; Takes a list and a target length. Returns the contents of
+;; the list in a shortened list where there are len + 1 elements
+;; with the last being a list of the leftovers.
+(define list-cutoff
+  (lambda (ls len)
+    (if (equal? len 1)
+        (list (car ls) (cdr ls))
+        (cons (car ls) (list-cutoff (cdr ls) (- len 1))))))
+
 (define apply-proc
   (lambda (proc-value args)
     (cases proc-val proc-value
@@ -66,7 +88,21 @@
                             (begin (eval-exp (car ls) env) (loop (cdr ls)))
                             (eval-exp (car ls) env))
                         ))]
-           
+           [list-closure (pars body env)
+                         (let ((env (extend-env (list pars) (list args) env)))
+                           (let loop ((ls body))
+                             (if (not (null? (cdr ls)))
+                                 (begin (eval-exp (car ls) env) (loop (cdr ls)))
+                                 (eval-exp (car ls) env))
+                             ))]
+           [improper-list-closure (pars body env)
+                                  (let ((pars (i-list->list pars)))
+                                    (let ((env (extend-env pars (list-cutoff args (- (length pars) 1)) env)))
+                                      (let loop ((ls body))
+                                        (if (not (null? (cdr ls)))
+                                            (begin (eval-exp (car ls) env) (loop (cdr ls)))
+                                            (eval-exp (car ls) env))
+                                        )))]
            [else (error 'apply-proc
                         "Attempt to apply bad procedure: ~s"
                         proc-value)])))
