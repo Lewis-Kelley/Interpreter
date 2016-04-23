@@ -114,7 +114,7 @@
                               vector make-vector vector-ref vector? number? symbol?
                               set-car! set-cdr! vector-set! display newline
                               caar cadr cdar cddr caaar caadr cadar cdaar
-                              caddr cdadr cddar cdddr))
+                              caddr cdadr cddar cdddr map apply))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -214,6 +214,18 @@
        [(cdadr) one-arg]
        [(caddr) one-arg]
        [(cdddr) one-arg]
+       [(map) (lambda (prim-proc args)
+                (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
+                  (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
+                  (let loop ((args (2nd args))
+                              (proc (1st args)))
+                    (if (null? args)
+                      '()
+                      (cons (apply-proc proc (list (car args))) (loop (cdr args) proc))))))]
+       [(apply) (lambda (prim-proc args)
+                  (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
+                    (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
+                    (apply-proc (1st args) (2nd args))))]
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
                          prim-proc)]) prim-proc args)))
