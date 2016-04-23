@@ -14,6 +14,26 @@
            [quote-exp (datum) (2nd datum)]
            [begin-exp (exps)
                       (for-each (lambda (exp) (eval-exp exp env)) exps)]
+           [and-exp (exps)
+                    (if (null? exps)
+                      #t
+                      (let loop ((exps exps))
+                        (if (null? (cdr exps))
+                          (eval-exp (car exps) env)
+                          (if (eval-exp (car exps) env)
+                              (loop (cdr exps))
+                              #f))))]
+           [or-exp (exps)
+                    (if (null? exps)
+                      #f
+                      (let loop ((exps exps))
+
+                        (if (null? (cdr exps))
+                          (eval-exp (car exps) env)
+                          (let ((res (eval-exp (car exps) env)))
+                            (if res
+                              res
+                              (loop (cdr exps)))))))]
            [var-exp (id)
                     (apply-env env id; look up its value.
                                (lambda (x) x) ; procedure to call if id is in the environment
@@ -105,7 +125,7 @@
                               vector make-vector vector-ref vector? number? symbol?
                               set-car! set-cdr! vector-set! display newline
                               caar cadr cdar cddr caaar caadr cadar cdaar
-                              caddr cdadr cddar cdddr map apply))
+                              caddr cdadr cddar cdddr map apply member))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -217,6 +237,7 @@
                   (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
                     (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
                     (apply-proc (1st args) (2nd args))))]
+       [(member) two-arg]
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
                          prim-proc)]) prim-proc args)))

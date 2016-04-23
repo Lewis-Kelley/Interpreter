@@ -41,10 +41,19 @@
    (false-exp expression?))
   (begin-exp
    (exps (list-of expression?)))
+  (and-exp
+    (exps (list-of expression?)))
+  (or-exp
+    (exps (list-of expression?)))
   (cond-exp
    (tests (list-of expression?))
    (bodies (list-of (list-of expression?)))
    (else-body (list-of expression?)))
+  (case-exp
+    (exp expression?)
+    (tests (list-of (list-of expression?)))
+    (bodies (list-of (list-of expression?)))
+    (else-body (list-of expression?)))
   (quote-exp
    (id (lambda (item)
          (and (pair? item)

@@ -66,6 +66,12 @@
                                         ; begin-exp
        ((equal? (car datum) 'begin)
         (begin-exp (map parse-exp (cdr datum))))
+                                        ;and-exp
+        ((equal? (car datum) 'and)
+          (and-exp (map parse-exp (cdr datum))))
+                                        ;or-exp
+        ((equal? (car datum) 'or)
+          (or-exp (map parse-exp (cdr datum))))
                                         ; cond-exp
        ((equal? (car datum) 'cond)
         (let ((tests (map 1st (cdr datum))) (bodies (map cdr (cdr datum))))
@@ -81,7 +87,22 @@
                                (map parse-exp body))
                              bodies)
                         '()))))
-                                        ; set!-exp
+                                      ; case-exp
+       ((equal? (car datum) 'case)
+            (let ((tests (map 1st (cddr datum))) (bodies (map cdr (cddr datum))))
+              (if (equal? (car (reverse tests)) 'else)
+                (let ((rev-bodies (reverse bodies)))
+                  (case-exp (parse-exp (2nd datum)) (map (lambda (x) (map parse-exp x)) (reverse (cdr (reverse tests))))
+                            (map (lambda (body)
+                                   (map parse-exp body))
+                                 (reverse (cdr rev-bodies)))
+                            (map parse-exp (car rev-bodies))))
+                (case-exp (parse-exp (2nd datum)) (map (lambda (x) (map parse-exp x)) tests)
+                          (map (lambda (body)
+                                 (map parse-exp body))
+                               bodies)
+                          '()))))
+                                      ; set!-exp
        ((equal? (1st datum) 'set!)
 
         (if (or (null? (cdr datum))

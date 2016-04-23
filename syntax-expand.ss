@@ -21,5 +21,10 @@
                                       (syntax-expand (cond-exp (cdr tests)
                                                                (cdr bodies)
                                                                else-body))))]
+           [case-exp (exp tests bodies else-body)
+                      (syntax-expand (cond-exp
+                          (map (lambda (x) (app-exp (var-exp 'member) (list (syntax-expand exp) (app-exp (var-exp 'list) (map syntax-expand x))))) tests)
+                          bodies
+                          else-body))]
            [else
             exp])))
