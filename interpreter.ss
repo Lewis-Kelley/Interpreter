@@ -24,7 +24,8 @@
                             (eval-exp f-exp env))]
            [if-exp (test t-exp)
                    (if (eval-exp test env)
-                       (eval-exp t-exp env))]
+                       (eval-exp t-exp env)
+                       (void))]
            [app-exp (rator rands)
                     (let ([proc-value (eval-exp rator env)]
                           [args (eval-rands rands env)])

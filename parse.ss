@@ -79,12 +79,14 @@
 
         (if (or (null? (cdr datum))
                 (null? (cddr datum))
-                (not (null? (cddddr datum))))
+                )
             (eopl:error 'parse-exp "*if-exp* incorrect length ~s" datum))
 
         (if (null? (cdddr datum))
             (if-exp (parse-exp (2nd datum)) (parse-exp (3rd datum)))
-            (if-else-exp (parse-exp (2nd datum)) (parse-exp (3rd datum)) (parse-exp (4th datum)))))
+            (if (not (null? (cddddr datum)))
+              (eopl:error 'parse-exp "*if-exp* incorrect length ~s" datum)
+              (if-else-exp (parse-exp (2nd datum)) (parse-exp (3rd datum)) (parse-exp (4th datum))))))
                                         ;
                                         ; lambda's
                                         ;
