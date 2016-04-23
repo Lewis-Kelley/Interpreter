@@ -16,24 +16,24 @@
                       (for-each (lambda (exp) (eval-exp exp env)) exps)]
            [and-exp (exps)
                     (if (null? exps)
-                      #t
-                      (let loop ((exps exps))
-                        (if (null? (cdr exps))
-                          (eval-exp (car exps) env)
-                          (if (eval-exp (car exps) env)
-                              (loop (cdr exps))
-                              #f))))]
+                        #t
+                        (let loop ((exps exps))
+                          (if (null? (cdr exps))
+                              (eval-exp (car exps) env)
+                              (if (eval-exp (car exps) env)
+                                  (loop (cdr exps))
+                                  #f))))]
            [or-exp (exps)
-                    (if (null? exps)
-                      #f
-                      (let loop ((exps exps))
+                   (if (null? exps)
+                       #f
+                       (let loop ((exps exps))
 
-                        (if (null? (cdr exps))
-                          (eval-exp (car exps) env)
-                          (let ((res (eval-exp (car exps) env)))
-                            (if res
-                              res
-                              (loop (cdr exps)))))))]
+                         (if (null? (cdr exps))
+                             (eval-exp (car exps) env)
+                             (let ((res (eval-exp (car exps) env)))
+                               (if res
+                                   res
+                                   (loop (cdr exps)))))))]
            [var-exp (id)
                     (apply-env env id; look up its value.
                                (lambda (x) x) ; procedure to call if id is in the environment
@@ -227,16 +227,16 @@
        [(cdddr) one-arg]
        [(map) (lambda (prim-proc args)
                 (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
-                  (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
-                  (let loop ((args (2nd args))
-                              (proc (1st args)))
-                    (if (null? args)
-                      '()
-                      (cons (apply-proc proc (list (car args))) (loop (cdr args) proc))))))]
+                    (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
+                    (let loop ((args (2nd args))
+                               (proc (1st args)))
+                      (if (null? args)
+                          '()
+                          (cons (apply-proc proc (list (car args))) (loop (cdr args) proc))))))]
        [(apply) (lambda (prim-proc args)
                   (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
-                    (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
-                    (apply-proc (1st args) (2nd args))))]
+                      (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
+                      (apply-proc (1st args) (2nd args))))]
        [(member) two-arg]
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
