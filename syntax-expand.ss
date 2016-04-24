@@ -12,15 +12,22 @@
                                                                        (cdr vars)
                                                                        body))))))]
            [cond-exp (tests bodies else-body)
-                     (if (null? (cdr tests))
-                         (if-else-exp (syntax-expand (1st tests))
-                                      (begin-exp (map syntax-expand (1st bodies)))
-                                      (begin-exp (map syntax-expand else-body)))
-                         (if-else-exp (syntax-expand (1st tests))
-                                      (begin-exp (map syntax-expand (1st bodies)))
-                                      (syntax-expand (cond-exp (cdr tests)
-                                                               (cdr bodies)
-                                                               else-body))))]
+                     (cond
+                      ((null? tests)
+                       (begin-exp (map syntax-expand else-body)))
+                      ((null? (cdr tests))
+                       (if-else-exp (syntax-expand (1st tests))
+                                    (if (null? (1st bodies))
+                                        (lit-exp '#t)
+                                        (begin-exp (map syntax-expand (1st bodies))))
+                                    (begin-exp (map syntax-expand else-body))))
+                      (else (if-else-exp (syntax-expand (1st tests))
+                                         (if (null? (1st bodies))
+                                             (lit-exp '#t)
+                                             (begin-exp (map syntax-expand (1st bodies))))
+                                         (syntax-expand (cond-exp (cdr tests)
+                                                                  (cdr bodies)
+                                                                  else-body)))))]
            [case-exp (exp tests bodies else-body)
                      (syntax-expand (cond-exp
                                      (map (lambda (x)

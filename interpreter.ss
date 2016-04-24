@@ -1,11 +1,10 @@
-                                        ; top-level-eval evaluates a form in the global environment
+;; top-level-eval evaluates a form in the global environment
 
 (define top-level-eval
   (lambda (form)
-                                        ; later we may add things that are not expressions.
     (eval-exp form init-env)))
 
-                                        ; eval-exp is the main component of the interpreter
+;; eval-exp is the main component of the interpreter
 
 (define eval-exp
   (lambda (exp env)
@@ -60,15 +59,11 @@
                                      (improper-list-closure pars body env)]
            [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
-                                        ; evaluate the list of operands, putting results into a list
+;; evaluate the list of operands, putting results into a list
 
 (define eval-rands
   (lambda (rands env)
     (map (lambda (x) (eval-exp x env)) rands)))
-
-                                        ;  Apply a procedure to its arguments.
-                                        ;  At this point, we only have primitive procedures.
-                                        ;  User-defined procedures will be added later.
 
 ;; Converts an improper list to a proper list.
 ;; WARNING: Does not check if the argument is actually improper.
@@ -92,7 +87,6 @@
   (lambda (proc-value args)
     (cases proc-val proc-value
            [prim-proc (op) (apply-prim-proc op args)]
-                                        ; You will add other cases
            [closure (pars body env)
                     (let ((env (extend-env pars args env)))
                       (let loop ((ls body))
@@ -125,7 +119,7 @@
                               vector make-vector vector-ref vector? number? symbol?
                               set-car! set-cdr! vector-set! display newline
                               caar cadr cdar cddr caaar caadr cadar cdaar
-                              caddr cdadr cddar cdddr map apply member))
+                              caddr cdadr cddar cdddr map apply member quotient))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -133,9 +127,6 @@
    (map prim-proc
         *prim-proc-names*)
    (empty-env)))
-
-                                        ; Usually an interpreter must define each
-                                        ; built-in procedure individually.  We are "cheating" a little bit.
 
 (define arg-test
   (lambda (pred?)
@@ -238,6 +229,7 @@
                       (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
                       (apply-proc (1st args) (2nd args))))]
        [(member) two-arg]
+       [(quotient) two-arg]
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
                          prim-proc)]) prim-proc args)))
