@@ -72,6 +72,11 @@
                                         ; or-exp
        ((equal? (car datum) 'or)
         (or-exp (map parse-exp (cdr datum))))
+                                        ; while-exp
+       ((equal? (car datum) 'while)
+        (while-exp
+          (parse-exp (2nd datum))
+          (map parse-exp (cddr datum))))
                                         ; cond-exp
        ((equal? (car datum) 'cond)
         (if (null? (cdr datum))

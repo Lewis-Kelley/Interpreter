@@ -119,8 +119,8 @@
                    0
                    2
                    (6)
-                   ;; (131072)
-                   ;; (3)
+                   (131072)
+                   (3)
                    )]
         [answers 
          (list 
@@ -159,16 +159,16 @@
           (eval-one-exp ' (let ((a (list 5))) 
                             (if #t (begin (set-car! a 3) 
                                           (set-car! a (+ 3 (car a))) a))))
-          ;; (eval-one-exp '(let ([a (list 3)]) 
-          ;;                  (while (< (car a) 100000) 
-          ;;                         (set-car! a (* (car a) (car a))) 
-          ;;                         (set-car! a (quotient (car a) 2))) 
-          ;;                  a))
-          ;; (eval-one-exp '(let ([a (list 3)]) 
-          ;;                  (while (< (car a) 3) 
-          ;;                         (set-car! a (* (car a) (car a))) 
-          ;;                         (set-car! a (quotient (car a) 2))) 
-          ;;                  a))
+          (eval-one-exp '(let ([a (list 3)]) 
+                           (while (< (car a) 100000) 
+                                  (set-car! a (* (car a) (car a))) 
+                                  (set-car! a (quotient (car a) 2))) 
+                           a))
+          (eval-one-exp '(let ([a (list 3)]) 
+                           (while (< (car a) 3) 
+                                  (set-car! a (* (car a) (car a))) 
+                                  (set-car! a (quotient (car a) 2))) 
+                           a))
           )])
     (display-results correct answers equal?)))
 
