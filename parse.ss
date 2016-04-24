@@ -180,7 +180,10 @@
                   (eopl:error 'parse-exp "*named-let-exp* must have a body ~s" datum))
 
               (named-let-exp (2nd datum)
-                             (map (op-on-2nd parse-exp) (3rd datum))
+                             (map 1st (3rd datum))
+                             (map (lambda (item)
+                                    (parse-exp (2nd item)))
+                                  (3rd datum))
                              (map parse-exp (cdddr datum))))
 
                                         ; let-exp
@@ -194,7 +197,10 @@
               (if (null? (cddr datum))
                   (eopl:error 'parse-exp "*let-exp* must have a body ~s" datum))
 
-              (let-exp (map (op-on-2nd parse-exp) (2nd datum))
+              (let-exp (map 1st (2nd datum))
+                       (map (lambda (item)
+                              (parse-exp (2nd item)))
+                            (2nd datum))
                        (map parse-exp (cddr datum))))))
 
                                         ; let*-exp
@@ -209,7 +215,10 @@
         (if (null? (cddr datum))
             (eopl:error 'parse-exp "*let*-exp* must have a body ~s" datum))
 
-        (let*-exp (map (op-on-2nd parse-exp) (2nd datum))
+        (let*-exp (map 1st (2nd datum))
+                  (map (lambda (item)
+                         (parse-exp (2nd item)))
+                       (2nd datum))
                   (map parse-exp (cddr datum))))
 
                                         ; letrec-exp
@@ -224,7 +233,10 @@
         (if (null? (cddr datum))
             (eopl:error 'parse-exp "*letrec-exp* must have a body ~s" datum))
 
-        (letrec-exp (map (op-on-2nd parse-exp) (2nd datum))
+        (letrec-exp (map 1st (2nd datum))
+                    (map (lambda (item)
+                           (parse-exp (2nd item)))
+                         (2nd datum))
                     (map parse-exp (cddr datum))))
 
                                         ; app-exp

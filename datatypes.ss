@@ -20,17 +20,21 @@
    (id symbol?)
    (r-val-exp expression?))
   (let-exp
-   (vars (list-of var-def-pair?))
+   (vars (list-of symbol?))
+   (args (list-of expression?))
    (body (list-of expression?)))
   (let*-exp
-   (vars (list-of var-def-pair?))
+   (vars (list-of symbol?))
+   (args (list-of expression?))
    (body (list-of expression?)))
   (named-let-exp
    (id symbol?)
-   (pars (list-of var-def-pair?))
+   (vars (list-of symbol?))
+   (args (list-of expression?))
    (body (list-of expression?)))
   (letrec-exp
-   (vars (list-of var-def-pair?))
+   (vars (list-of symbol?))
+   (args (list-of expression?))
    (body (list-of expression?)))
   (if-exp
    (test expression?)

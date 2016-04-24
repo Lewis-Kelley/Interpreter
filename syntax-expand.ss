@@ -1,13 +1,14 @@
 (define syntax-expand
   (lambda (exp)
     (cases expression exp
-           [let-exp (vars body)
-                    (app-exp (lambda-exp (map 1st vars) (map syntax-expand body))
-                             (map syntax-expand (map 2nd vars)))]
-           [let*-exp (vars body)
+           [let-exp (vars args body)
+                    (app-exp (lambda-exp vars (map syntax-expand body))
+                             (map syntax-expand args))]
+           [let*-exp (vars args body)
                      (if (null? (cdr vars))
-                         (syntax-expand (let-exp vars body))
+                         (syntax-expand (let-exp vars args body))
                          (syntax-expand (let-exp (list (1st vars))
+                                                 (list (1st args))
                                                  (list (syntax-expand (let*-exp
                                                                        (cdr vars)
                                                                        body))))))]
