@@ -85,13 +85,15 @@
            [improper-pars-lambda-exp (pars body)
                                      (improper-pars-lambda-exp pars
                                                                (map syntax-expand body))]
-            [while-exp (test bodies)
-              (while-exp 
-                (syntax-expand test)
-                (map syntax-expand bodies))]
-            [set!-exp (id exp)
-              (set!-exp
-                id
-                (syntax-expand exp))]
+           [while-exp (test bodies)
+                      (while-exp 
+                       (syntax-expand test)
+                       (map syntax-expand bodies))]
+           [set!-exp (id exp)
+                     (set!-exp
+                      id
+                      (syntax-expand exp))]
+           [define-exp (sym val)
+             (define-exp sym (syntax-expand val))]
            [else
             (eopl:error 'syntax-expand "Unrecognized expression: ~s" exp)])))

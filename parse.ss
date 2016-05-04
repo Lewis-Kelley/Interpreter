@@ -125,6 +125,14 @@
             (eopl:error 'parse-exp "*set!-exp* incorrect length ~s" datum))
 
         (set!-exp (2nd datum) (parse-exp (3rd datum))))
+       ((equal? (1st datum) 'define)
+        (if (null? (cdr datum))
+            (eopl:error 'parse-exp "*define-exp* incorrect length ~s" datum))
+        (if (null? (cddr datum))
+            (define-exp (2nd datum) (var-exp void))
+            (if (not (null? (cdddr datum)))
+                (eopl:error 'parse-exp "*define-exp* incorrect length ~s" datum)
+                (define-exp (2nd datum) (parse-exp (3rd datum))))))
 
                                         ; if-exp/if-else-exp
        ((equal? (1st datum) 'if)

@@ -63,11 +63,13 @@
            [improper-pars-lambda-exp (pars body)
                                      (improper-list-closure pars body env)]
            [set!-exp (id exp)
-                      (set-ref!
-                        (apply-env-ref env id (lambda (x) x) (lambda () (eopl:error 'apply-env ; procedure to call if id not in env
-                                                      "variable not found in environment: ~s"
-                                                      id)))
-                        (eval-exp exp env))]
+                     (set-ref!
+                      (apply-env-ref env id (lambda (x) x) (lambda () (eopl:error 'apply-env ; procedure to call if id not in env
+                                                                                  "variable not found in environment: ~s"
+                                                                                  id)))
+                      (eval-exp exp env))]
+           [define-exp (sym val)
+             (append-env env sym (box (eval-exp val env)))]
            [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
 ;; evaluate the list of operands, putting results into a list
@@ -131,7 +133,7 @@
                               set-car! set-cdr! vector-set! display newline
                               caar cadr cdar cddr caaar caadr cadar cdaar
                               caddr cdadr cddar cdddr map apply member quotient
-                              eqv? append list-tail))
+                              eqv? append list-tail void))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -245,6 +247,7 @@
        [(eqv?) two-arg]
        [(append) any-arg]
        [(list-tail) two-arg]
+       [(void) zero-arg]
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
                          prim-proc)]) prim-proc args)))

@@ -61,6 +61,9 @@
   (while-exp
     (test expression?)
     (body (list-of expression?)))
+  (define-exp
+    (sym symbol?)
+    (val expression?))
   (quote-exp
    (id (lambda (item)
          (and (pair? item)
@@ -99,6 +102,14 @@
 
 (define scheme-value?
   (lambda (x) #t))
+
+(define append-env
+  (lambda (env sym val)
+    (set-cdr! (2nd env) (map (lambda (x) x) (2nd env)))
+    (set-car! (2nd env) sym)
+
+    (set-cdr! (3rd env) (map (lambda (x) x ) (3rd env)))
+    (set-car! (3rd env) val)))
 
 (define-datatype environment environment?
   (empty-env-record)
