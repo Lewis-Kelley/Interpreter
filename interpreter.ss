@@ -62,6 +62,12 @@
                                  (list-closure pars body env)]
            [improper-pars-lambda-exp (pars body)
                                      (improper-list-closure pars body env)]
+           [set!-exp (id exp)
+                      (set-ref!
+                        (apply-env-ref env id (lambda (x) x) (lambda () (eopl:error 'apply-env ; procedure to call if id not in env
+                                                      "variable not found in environment: ~s"
+                                                      id)))
+                        (eval-exp exp env))]
            [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
 ;; evaluate the list of operands, putting results into a list

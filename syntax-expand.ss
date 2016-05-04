@@ -74,5 +74,9 @@
               (while-exp 
                 (syntax-expand test)
                 (map syntax-expand bodies))]
+            [set!-exp (id exp)
+              (set!-exp
+                id
+                (syntax-expand exp))]
            [else
             (eopl:error 'syntax-expand "Unrecognized expression: ~s" exp)])))
