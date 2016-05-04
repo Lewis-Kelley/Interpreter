@@ -36,8 +36,8 @@
            [while-exp (test bodies)
                       (let loop ()
                         (if (eval-exp test env)
-                          (begin (for-each (lambda (exp) (eval-exp exp env)) bodies)
-                                  (loop))))]
+                            (begin (for-each (lambda (exp) (eval-exp exp env)) bodies)
+                                   (loop))))]
            [var-exp (id)
                     (apply-env env id; look up its value.
                                (lambda (x) x) ; procedure to call if id is in the environment
