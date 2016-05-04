@@ -130,7 +130,8 @@
                               vector make-vector vector-ref vector? number? symbol?
                               set-car! set-cdr! vector-set! display newline
                               caar cadr cdar cddr caaar caadr cadar cdaar
-                              caddr cdadr cddar cdddr map apply member quotient))
+                              caddr cdadr cddar cdddr map apply member quotient
+                              eqv? append list-tail))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -241,6 +242,9 @@
                       (apply-proc (1st args) (2nd args))))]
        [(member) two-arg]
        [(quotient) two-arg]
+       [(eqv?) two-arg]
+       [(append) any-arg]
+       [(list-tail) two-arg]
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
                          prim-proc)]) prim-proc args)))

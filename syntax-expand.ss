@@ -12,6 +12,21 @@
                                                  (list (syntax-expand (let*-exp
                                                                        (cdr vars)
                                                                        body))))))]
+           [letrec-exp (vars args body)
+                       (syntax-expand
+                        (let-exp vars
+                                 (map lit-exp (iota (length vars)))
+                                 (let loop ((vars vars)
+                                            (args args))
+                                   (if (null? vars)
+                                       body
+                                       (cons (set!-exp (car vars) (car args))
+                                             (loop (cdr vars) (cdr args)))))))]
+           [named-let-exp (id vars args body)
+                          (syntax-expand
+                           (letrec-exp (list id)
+                                       (list (lambda-exp vars body))
+                                       (list (app-exp (var-exp id) args))))]
            [cond-exp (tests bodies else-body)
                      (cond
                       ((null? tests)
