@@ -1,479 +1,479 @@
 (define (test-set!-local-variables)
-    (let ([correct '(
-		     73
-		     93
-		     19
-		     8
-		     43
-		     )]
-          [answers 
-            (list 
-	     (eval-one-exp ' 
-	      (let ([f #f] [x 3]) 
-		(set! f (lambda (n) 
-			  (+ 3 (* n 10)))) 
-		(set! x 7) 
-		(f x)))
-	     (eval-one-exp '((lambda (x) (set! x (+ x 1)) (+ x 2)) 90))
-	     (eval-one-exp ' 
-	      (let ([x 5] [y 3]) 
-		(let ([z (begin (set! x (+ x y)) 
-				x)]) 
-		  (+ z (+ x y)))))
-	     (eval-one-exp ' 
-	      (let ([a 5]) 
-		(if (not (= a 6)) 
-		    (begin (set! a (+ 1 a)) 
-			   (set! a (+ 1 a))) 3) (+ 1 a)))
-	     (eval-one-exp ' 
-	      (let ([f #f]) 
-		(let ([dummy (begin (set! f (lambda (n) (+ 3 (* n 10)))) 
-				    3)]) 
-		  (f 4))))
-	     )])
-      (display-results correct answers equal?)))
+  (let ([correct '(
+                   73
+                   93
+                   19
+                   8
+                   43
+                   )]
+        [answers 
+         (list 
+          (eval-one-exp ' 
+           (let ([f #f] [x 3]) 
+             (set! f (lambda (n) 
+                       (+ 3 (* n 10)))) 
+             (set! x 7) 
+             (f x)))
+          (eval-one-exp '((lambda (x) (set! x (+ x 1)) (+ x 2)) 90))
+          (eval-one-exp ' 
+           (let ([x 5] [y 3]) 
+             (let ([z (begin (set! x (+ x y)) 
+                             x)]) 
+               (+ z (+ x y)))))
+          (eval-one-exp ' 
+           (let ([a 5]) 
+             (if (not (= a 6)) 
+                 (begin (set! a (+ 1 a)) 
+                        (set! a (+ 1 a))) 3) (+ 1 a)))
+          (eval-one-exp ' 
+           (let ([f #f]) 
+             (let ([dummy (begin (set! f (lambda (n) (+ 3 (* n 10)))) 
+                                 3)]) 
+               (f 4))))
+          )])
+    (display-results correct answers equal?)))
 
 (define (test-simple-defines)
-    (let ([correct '(
-		     8
-		     13
-		     (12 14)
-		     32
-		     )]
-          [answers 
-            (list 
-	     (eval-one-exp ' (begin (define a 5) (+ a 3)))
-	     (eval-one-exp ' (begin (define c 5) 
-				    (define d (+ c 2)) 
-				    (+ d (add1 c))))
-	     (eval-one-exp ' 
-	      (begin 
-		(define e 5) 
-		(let ([f (+ e 2)]) 
-		  (set! e (+ e f)) 
-		  (set! f (* 2 f)) 
-		  (list e f))))
-	     (eval-one-exp ' 
-	      (begin (define ff 
-		       (letrec ([ff (lambda (x) 
-				      (if (= x 1) 
-					  2 
-					  (+ (* 2 x) 
-					     (ff (- x 2)))))]) 
-			 ff)) 
-		     (ff 7)))
-	     )])
-      (display-results correct answers equal?)))
+  (let ([correct '(
+                   8
+                   13
+                   (12 14)
+                   32
+                   )]
+        [answers 
+         (list 
+          (eval-one-exp ' (begin (define a 5) (+ a 3)))
+          (eval-one-exp ' (begin (define c 5) 
+                                 (define d (+ c 2)) 
+                                 (+ d (add1 c))))
+          (eval-one-exp ' 
+           (begin 
+             (define e 5) 
+             (let ([f (+ e 2)]) 
+               (set! e (+ e f)) 
+               (set! f (* 2 f)) 
+               (list e f))))
+          (eval-one-exp ' 
+           (begin (define ff 
+                    (letrec ([ff (lambda (x) 
+                                   (if (= x 1) 
+                                       2 
+                                       (+ (* 2 x) 
+                                          (ff (- x 2)))))]) 
+                      ff)) 
+                  (ff 7)))
+          )])
+    (display-results correct answers equal?)))
 
 (define (test-letrec-and-define)
-    (let ([correct '(
-		     55
-		     773
-		     )]
-          [answers 
-            (list 
-	     (begin (reset-global-env) 
-		    (eval-one-exp ' 
-		     (letrec ([f (lambda (n) 
-				   (if (= n 0) 
-				       0 
-				       (+ n 
-					  (f (sub1 n)))))]) 
-		       (f 10))))
-	     (eval-one-exp ' 
-	      (letrec ([f (lambda (n) 
-			    (if (zero? n) 
-				0 
-				(+ 4 (g (sub1 n)))))] 
-		       [g (lambda (n) 
-			    (if (zero? n) 
-				0 
-				(+ 3 (f (sub1 n)))))]) 
-		(g (f (g (f 5))))))
-	     )])
-      (display-results correct answers equal?)))
+  (let ([correct '(
+                   55
+                   773
+                   )]
+        [answers 
+         (list 
+          (begin (reset-global-env) 
+                 (eval-one-exp ' 
+                  (letrec ([f (lambda (n) 
+                                (if (= n 0) 
+                                    0 
+                                    (+ n 
+                                       (f (sub1 n)))))]) 
+                    (f 10))))
+          (eval-one-exp ' 
+           (letrec ([f (lambda (n) 
+                         (if (zero? n) 
+                             0 
+                             (+ 4 (g (sub1 n)))))] 
+                    [g (lambda (n) 
+                         (if (zero? n) 
+                             0 
+                             (+ 3 (f (sub1 n)))))]) 
+             (g (f (g (f 5))))))
+          )])
+    (display-results correct answers equal?)))
 
 (define (test-named-let-and-define)
-    (let ([correct '(
-		     120
-		     120
-		     (8 1 2 3 4 5 6 7)
-		     987
-		     16
-		     (5 () (((4))) (3 2) 1)
-		     )]
-          [answers 
-            (list 
-	     (eval-one-exp ' 
-	      (begin 
-		(define fact 
-		  (lambda (n) 
-		    (let loop ((n n) (m 1)) 
-		      (if (= n 0) 
-			  m 
-			  (loop (- n 1) (* m n)))))) 
-		(fact 5)))
-	     (eval-one-exp ' 
-	      (let fact ((n 5) (m 1)) 
-		(if (= n 0) 
-		    m 
-		    (fact (- n 1) (* m n)))))
-	     (begin (reset-global-env) 
-		    (eval-one-exp '
-		     (define rotate-linear 
-		       (letrec ([reverse 
-				 (lambda (lyst revlist) 
-				   (if (null? lyst) 
-				       revlist 
-				       (reverse (cdr lyst) 
-						(cons (car lyst) revlist))))]) 
-			 (lambda (los) 
-			   (let loop ([los los] [sofar '()]) 
-			     (cond [(null? los) los] 
-				   [(null? (cdr los)) 
-				    (cons (car los) (reverse sofar '()))] 
-				   [else (loop (cdr los) (cons (car los) sofar))])))))) 
-		    (eval-one-exp '(rotate-linear '(1 2 3 4 5 6 7 8))))
-	     (begin (reset-global-env) 
-		    (eval-one-exp '
-		     (define fib-memo 
-		       (let ([max 2] [sofar '((1 . 1) (0 . 1))]) 
-			 (lambda (n) 
-			   (if (< n max) 
-			       (cdr (assq n sofar)) 
-			       (let* ([v1 (fib-memo (- n 1))] 
-				      [v2 (fib-memo (- n 2))] 
-				      [v3 (+ v2 v1)]) 
-				 (set! max (+ n 1)) 
-				 (set! sofar (cons (cons n v3) sofar)) v3)))))) 
-		    (eval-one-exp '(fib-memo 15)))
-	     (begin (reset-global-env) 
-		    (eval-one-exp '
-		     (define f1 (lambda (x) 
-				  (f2 (+ x 1))))) 
-		    (eval-one-exp '
-		     (define f2 (lambda (x) (* x x)))) 
-		    (eval-one-exp '(f1 3)))
-	    (begin 
-	      (reset-global-env) 
-	      (eval-one-exp '
-	       (define ns-list-recur 
-		 (lambda (seed item-proc list-proc) 
-		   (letrec ([helper (lambda (ls) 
-				      (if (null? ls) 
-					  seed 
-					  (let ([c (car ls)]) 
-					    (if (or (pair? c) 
-						    (null? c)) 
-						(list-proc (helper c) 
-							   (helper (cdr ls))) 
-						(item-proc c (helper (cdr ls)))))))]) 
-		     helper)))) 
-	      (eval-one-exp '
-	       (define append 
-		 (lambda (s t) 
-		   (if (null? s) 
-		       t 
-		       (cons (car s) 
-			     (append (cdr s) t)))))) 
-	      (eval-one-exp '
-	       (define reverse* 
-		 (let ([snoc (lambda (x y) 
-			       (append y (list x)))]) 
-		   (ns-list-recur '() snoc snoc)))) 
-	      (eval-one-exp '(reverse* '(1 (2 3) (((4))) () 5)))))])
-      (display-results correct answers equal?)))
+  (let ([correct '(
+                   120
+                   120
+                   (8 1 2 3 4 5 6 7)
+                   987
+                   16
+                   (5 () (((4))) (3 2) 1)
+                   )]
+        [answers 
+         (list 
+          (eval-one-exp ' 
+           (begin 
+             (define fact 
+               (lambda (n) 
+                 (let loop ((n n) (m 1)) 
+                   (if (= n 0) 
+                       m 
+                       (loop (- n 1) (* m n)))))) 
+             (fact 5)))
+          (eval-one-exp ' 
+           (let fact ((n 5) (m 1)) 
+             (if (= n 0) 
+                 m 
+                 (fact (- n 1) (* m n)))))
+          (begin (reset-global-env) 
+                 (eval-one-exp '
+                  (define rotate-linear 
+                    (letrec ([reverse 
+                              (lambda (lyst revlist) 
+                                (if (null? lyst) 
+                                    revlist 
+                                    (reverse (cdr lyst) 
+                                             (cons (car lyst) revlist))))]) 
+                      (lambda (los) 
+                        (let loop ([los los] [sofar '()]) 
+                          (cond [(null? los) los] 
+                                [(null? (cdr los)) 
+                                 (cons (car los) (reverse sofar '()))] 
+                                [else (loop (cdr los) (cons (car los) sofar))])))))) 
+                 (eval-one-exp '(rotate-linear '(1 2 3 4 5 6 7 8))))
+          (begin (reset-global-env) 
+                 (eval-one-exp '
+                  (define fib-memo 
+                    (let ([max 2] [sofar '((1 . 1) (0 . 1))]) 
+                      (lambda (n) 
+                        (if (< n max) 
+                            (cdr (assq n sofar)) 
+                            (let* ([v1 (fib-memo (- n 1))] 
+                                   [v2 (fib-memo (- n 2))] 
+                                   [v3 (+ v2 v1)]) 
+                              (set! max (+ n 1)) 
+                              (set! sofar (cons (cons n v3) sofar)) v3)))))) 
+                 (eval-one-exp '(fib-memo 15)))
+          (begin (reset-global-env) 
+                 (eval-one-exp '
+                  (define f1 (lambda (x) 
+                               (f2 (+ x 1))))) 
+                 (eval-one-exp '
+                  (define f2 (lambda (x) (* x x)))) 
+                 (eval-one-exp '(f1 3)))
+          (begin 
+            (reset-global-env) 
+            (eval-one-exp '
+             (define ns-list-recur 
+               (lambda (seed item-proc list-proc) 
+                 (letrec ([helper (lambda (ls) 
+                                    (if (null? ls) 
+                                        seed 
+                                        (let ([c (car ls)]) 
+                                          (if (or (pair? c) 
+                                                  (null? c)) 
+                                              (list-proc (helper c) 
+                                                         (helper (cdr ls))) 
+                                              (item-proc c (helper (cdr ls)))))))]) 
+                   helper)))) 
+            (eval-one-exp '
+             (define append 
+               (lambda (s t) 
+                 (if (null? s) 
+                     t 
+                     (cons (car s) 
+                           (append (cdr s) t)))))) 
+            (eval-one-exp '
+             (define reverse* 
+               (let ([snoc (lambda (x y) 
+                             (append y (list x)))]) 
+                 (ns-list-recur '() snoc snoc)))) 
+            (eval-one-exp '(reverse* '(1 (2 3) (((4))) () 5)))))])
+    (display-results correct answers equal?)))
 
 (define (test-set!-global-variables)
-    (let ([correct '(
-		     7
-		     4
-		     120
-		     9
-		     )]
-          [answers 
-            (list 
-	     (begin (reset-global-env) 
-		    (eval-one-exp '(define a 3)) 
-		    (eval-one-exp '(set! a 7)) 
-		    (eval-one-exp 'a))
-	     (begin (reset-global-env) 
-		    (eval-one-exp '(define a 3)) 
-		    (eval-one-exp '(define f '())) 
-		    (eval-one-exp '(set! f (lambda (x) (+ x 1)))) 
-		    (eval-one-exp '(f a)))
-	     (begin (reset-global-env) 
-		    (eval-one-exp '(define a 5)) 
-		    (eval-one-exp '(define f '())) 
-		    (eval-one-exp '(set! f (lambda (x) 
-					     (if (= x 0) 
-						 1 
-						 (* x (f (- x 1))))))) 
-		    (eval-one-exp '(f a)))
-	     (begin (reset-global-env) 
-		    (eval-one-exp '(define a 5)) 
-		    (eval-one-exp '(let ([b 7]) (set! a 9))) 
-		    (eval-one-exp 'a))
-	     )])
-      (display-results correct answers equal?)))
+  (let ([correct '(
+                   7
+                   4
+                   120
+                   9
+                   )]
+        [answers 
+         (list 
+          (begin (reset-global-env) 
+                 (eval-one-exp '(define a 3)) 
+                 (eval-one-exp '(set! a 7)) 
+                 (eval-one-exp 'a))
+          (begin (reset-global-env) 
+                 (eval-one-exp '(define a 3)) 
+                 (eval-one-exp '(define f '())) 
+                 (eval-one-exp '(set! f (lambda (x) (+ x 1)))) 
+                 (eval-one-exp '(f a)))
+          (begin (reset-global-env) 
+                 (eval-one-exp '(define a 5)) 
+                 (eval-one-exp '(define f '())) 
+                 (eval-one-exp '(set! f (lambda (x) 
+                                          (if (= x 0) 
+                                              1 
+                                              (* x (f (- x 1))))))) 
+                 (eval-one-exp '(f a)))
+          (begin (reset-global-env) 
+                 (eval-one-exp '(define a 5)) 
+                 (eval-one-exp '(let ([b 7]) (set! a 9))) 
+                 (eval-one-exp 'a))
+          )])
+    (display-results correct answers equal?)))
 
 
 (define (test-order-matters!)
-    (let ([correct '(
-		     (30 (29 27 24 20 15 9 2 3) 0)
-		     55
-		     )]
-          [answers 
-            (list 
-      (eval-one-exp ' 
-       (let ([r 2] [ls '(3)] [count 7]) 
-	 (let loop () 
-	   (if (> count 0) 
-	       (begin (set! ls (cons r ls)) 
-		      (set! r (+ r count)) 
-		      (set! count (- count 1)) (loop)) )) 
-	 (list r ls count)))
-      (eval-one-exp ' 
-       (begin 
-	 (define latest 1) 
-	 (define total 1) 
-	 (or (begin 
-	       (set! latest (+ latest 1)) 
-	       (set! total (+ total latest)) 
-	       (> total 50)) 
-	     (begin (set! latest (+ latest 1)) 
-		    (set! total (+ total latest)) 
-		    (> total 50)) 
-	     (begin (set! latest (+ latest 1)) 
-		    (set! total (+ total latest)) 
-		    (> total 50)) 
-	     (begin (set! latest (+ latest 1)) 
-		    (set! total (+ total latest)) 
-		    (> total 50)) 
-	     (begin (set! latest (+ latest 1)) 
-		    (set! total (+ total latest)) 
-		    (> total 50)) 
-	     (begin (set! latest (+ latest 1)) 
-		    (set! total (+ total latest)) 
-		    (> total 50)) 
-	     (begin (set! latest (+ latest 1)) 
-		    (set! total (+ total latest)) 
-		    (> total 50)) 
-	     (begin (set! latest (+ latest 1)) 
-		    (set! total (+ total latest)) 
-		    (> total 50)) 
-	     (begin (set! latest (+ latest 1)) 
-		    (set! total (+ total latest)) (> total 50)) 
-	     (begin (set! latest (+ latest 1)) 
-		    (set! total (+ total latest)) (> total 50))) total))
-	     )])
-      (display-results correct answers equal?)))
+  (let ([correct '(
+                   (30 (29 27 24 20 15 9 2 3) 0)
+                   55
+                   )]
+        [answers 
+         (list 
+          (eval-one-exp ' 
+           (let ([r 2] [ls '(3)] [count 7]) 
+             (let loop () 
+               (if (> count 0) 
+                   (begin (set! ls (cons r ls)) 
+                          (set! r (+ r count)) 
+                          (set! count (- count 1)) (loop)) )) 
+             (list r ls count)))
+          (eval-one-exp ' 
+           (begin 
+             (define latest 1) 
+             (define total 1) 
+             (or (begin 
+                   (set! latest (+ latest 1)) 
+                   (set! total (+ total latest)) 
+                   (> total 50)) 
+                 (begin (set! latest (+ latest 1)) 
+                        (set! total (+ total latest)) 
+                        (> total 50)) 
+                 (begin (set! latest (+ latest 1)) 
+                        (set! total (+ total latest)) 
+                        (> total 50)) 
+                 (begin (set! latest (+ latest 1)) 
+                        (set! total (+ total latest)) 
+                        (> total 50)) 
+                 (begin (set! latest (+ latest 1)) 
+                        (set! total (+ total latest)) 
+                        (> total 50)) 
+                 (begin (set! latest (+ latest 1)) 
+                        (set! total (+ total latest)) 
+                        (> total 50)) 
+                 (begin (set! latest (+ latest 1)) 
+                        (set! total (+ total latest)) 
+                        (> total 50)) 
+                 (begin (set! latest (+ latest 1)) 
+                        (set! total (+ total latest)) 
+                        (> total 50)) 
+                 (begin (set! latest (+ latest 1)) 
+                        (set! total (+ total latest)) (> total 50)) 
+                 (begin (set! latest (+ latest 1)) 
+                        (set! total (+ total latest)) (> total 50))) total))
+          )])
+    (display-results correct answers equal?)))
 
 (define (test-misc)
-    (let ([correct '(
-		     3
-		     (5 7)
-		     )]
-          [answers 
-            (list 
-	     (eval-one-exp '(apply apply (list + '(1 2))))
-	     (eval-one-exp '(apply map (list (lambda (x) (+ x 3)) '(2 4))))
-	     )])
-      (display-results correct answers equal?)))
+  (let ([correct '(
+                   3
+                   (5 7)
+                   )]
+        [answers 
+         (list 
+          (eval-one-exp '(apply apply (list + '(1 2))))
+          (eval-one-exp '(apply map (list (lambda (x) (+ x 3)) '(2 4))))
+          )])
+    (display-results correct answers equal?)))
 
 (define (test-ref)
-    (let ([correct '(
-		     (4 3)
-		     (4 4)
-		     (1 2 3)
-		     ((1 2 3)(b b b))
-		     )]
-          [answers 
-            (list 
-	     (eval-one-exp ' 
-	      (let ([a 3] 
-		    [b 4] 
-		    [swap! (lambda ((ref x) (ref y)) 
-			     (let ([temp x]) 
-			       (set! x y) 
-			       (set! y temp)))]) 
-		(swap! a b) 
-		(list a b)))
-	     (eval-one-exp ' 
-	      (let ([a 3] 
-		    [b 4] 
-		    [swap (lambda ((ref x) y) 
-			    (let ([temp x]) 
-			      (set! x y) 
-			      (set! y temp)))]) 
-		(swap a b) 
-		(list a b)))
-	     (begin (reset-global-env) 
-		    (eval-one-exp '
-		     (let* ([a '(1 2 3)] 
-			    [b ((lambda ((ref x)) x) a)]) 
-		       (set! b 'foo) a)))
-	     (begin (reset-global-env) 
-		    (eval-one-exp ' (define x '(a a a))) 
-		    (eval-one-exp '(define y '(b b b))) 
-		    (eval-one-exp '(let () 
-				     ((lambda ((ref x) y) 
-					(set! x '(1 2 3)) 
-					(set! y '(4 5 6))) 
-				      x y) 
-				     (list x y))))
-	     )])
-      (display-results correct answers equal?)))
+  (let ([correct '(
+                   (4 3)
+                   (4 4)
+                   (1 2 3)
+                   ((1 2 3)(b b b))
+                   )]
+        [answers 
+         (list 
+          (eval-one-exp ' 
+           (let ([a 3] 
+                 [b 4] 
+                 [swap! (lambda ((ref x) (ref y)) 
+                          (let ([temp x]) 
+                            (set! x y) 
+                            (set! y temp)))]) 
+             (swap! a b) 
+             (list a b)))
+          (eval-one-exp ' 
+           (let ([a 3] 
+                 [b 4] 
+                 [swap (lambda ((ref x) y) 
+                         (let ([temp x]) 
+                           (set! x y) 
+                           (set! y temp)))]) 
+             (swap a b) 
+             (list a b)))
+          (begin (reset-global-env) 
+                 (eval-one-exp '
+                  (let* ([a '(1 2 3)] 
+                         [b ((lambda ((ref x)) x) a)]) 
+                    (set! b 'foo) a)))
+          (begin (reset-global-env) 
+                 (eval-one-exp ' (define x '(a a a))) 
+                 (eval-one-exp '(define y '(b b b))) 
+                 (eval-one-exp '(let () 
+                                  ((lambda ((ref x) y) 
+                                     (set! x '(1 2 3)) 
+                                     (set! y '(4 5 6))) 
+                                   x y) 
+                                  (list x y))))
+          )])
+    (display-results correct answers equal?)))
 
 (define (test-basics)
-    (let ([correct '(
-		     (1 1 2 6 24 120)
-		     40320
-		     120
-		     (#t #f #f #t)
-		     )]
-          [answers 
-            (list 
-	     (eval-one-exp '
-	      (letrec ([fact (lambda (x)
-			       (if (zero? x) 
-				   1
-				   (* x (fact (- x 1)))))])
-		(map fact '(0 1 2 3 4 5))))
-	     (eval-one-exp '
-	      (let f ([n 8] [acc 1])
-		(if (= n 0)
-		    acc
-		    (f (sub1 n) (* acc n)))))
-	     
-	     (eval-one-exp '
-	      (let ([n 5])
-		(let f ([n n] [acc 1])
-		  (if (= n 0)
-		      acc
-		      (f (sub1 n) (* acc n))))))
-	     
-	     (eval-one-exp '
-	      (letrec ([even? (lambda (n)
-				(if (zero? n) 
-				    #t
-				    (odd? (- n 1))))]
-		       [odd? (lambda (m)
-			       (if (zero? m)
-				   #f
-				   (even? (- m 1))))])
-		(list (odd? 3) (even? 3) (odd? 4) (even? 4))))	     )])
-      (display-results correct answers equal?)))
+  (let ([correct '(
+                   (1 1 2 6 24 120)
+                   40320
+                   120
+                   (#t #f #f #t)
+                   )]
+        [answers 
+         (list 
+          (eval-one-exp '
+           (letrec ([fact (lambda (x)
+                            (if (zero? x) 
+                                1
+                                (* x (fact (- x 1)))))])
+             (map fact '(0 1 2 3 4 5))))
+          (eval-one-exp '
+           (let f ([n 8] [acc 1])
+             (if (= n 0)
+                 acc
+                 (f (sub1 n) (* acc n)))))
+          
+          (eval-one-exp '
+           (let ([n 5])
+             (let f ([n n] [acc 1])
+               (if (= n 0)
+                   acc
+                   (f (sub1 n) (* acc n))))))
+          
+          (eval-one-exp '
+           (letrec ([even? (lambda (n)
+                             (if (zero? n) 
+                                 #t
+                                 (odd? (- n 1))))]
+                    [odd? (lambda (m)
+                            (if (zero? m)
+                                #f
+                                (even? (- m 1))))])
+             (list (odd? 3) (even? 3) (odd? 4) (even? 4))))	     )])
+    (display-results correct answers equal?)))
 
 (define (test-answers-are-sets)
-    (let ([correct '(
-		     (k e b d a c)
-		     ((3 a) (2 b)(3 b) (2 a) (1 a) (1 b))
-		     )]
-          [answers 
-            (list 
-	     (eval-one-exp '
-	      (letrec ([union
-			(lambda (s1 s2)
-			  (cond [(null? s1) s2]
-				[(member? (car s1) s2) (union (cdr s1) s2)]
-				[else (cons (car s1) (union (cdr s1) s2))]))]
-		       [member? (lambda (sym ls)
-				  (cond [(null? ls) #f]
-					[(eqv? (car ls) sym) #t]
-					[else (member? sym (cdr ls))]))])
-		(union '(a c e d k) '(e b a d c))))
-	     (eval-one-exp '
-	     (letrec ([product
-		       (lambda (x y)
-			 (if (null? y)
-			     '()
-			     (let loop ([x x] [accum '()])
-			       (if (null? x)
-				   accum
-				   (loop (cdr x)
-					 (append (map (lambda (s)
-							(list (car x) s))
-						      y)
-						 accum))))))])
-	       (product '(1 2 3) '(a b))))
-	     )])
-      (display-results correct answers sequal?-grading)))
+  (let ([correct '(
+                   (k e b d a c)
+                   ((3 a) (2 b)(3 b) (2 a) (1 a) (1 b))
+                   )]
+        [answers 
+         (list 
+          (eval-one-exp '
+           (letrec ([union
+                     (lambda (s1 s2)
+                       (cond [(null? s1) s2]
+                             [(member? (car s1) s2) (union (cdr s1) s2)]
+                             [else (cons (car s1) (union (cdr s1) s2))]))]
+                    [member? (lambda (sym ls)
+                               (cond [(null? ls) #f]
+                                     [(eqv? (car ls) sym) #t]
+                                     [else (member? sym (cdr ls))]))])
+             (union '(a c e d k) '(e b a d c))))
+          (eval-one-exp '
+           (letrec ([product
+                     (lambda (x y)
+                       (if (null? y)
+                           '()
+                           (let loop ([x x] [accum '()])
+                             (if (null? x)
+                                 accum
+                                 (loop (cdr x)
+                                       (append (map (lambda (s)
+                                                      (list (car x) s))
+                                                    y)
+                                               accum))))))])
+             (product '(1 2 3) '(a b))))
+          )])
+    (display-results correct answers sequal?-grading)))
 
 (define (test-additional)
-    (let ([correct '(
-		     (8 6 5 4 3 2 1)
-		     )]
-      [answers 
-       (list 
-	(eval-one-exp ' 
-	 (letrec ([sort (lambda (pred? l) 
-			  (if (null? l) l 
-			      (dosort pred? l (length l))))] 
-		  [merge (lambda (pred? l1 l2) 
-			   (cond [(null? l1) l2] 
-				 [(null? l2) l1] 
-				 [(pred? (car l2) (car l1)) 
-				  (cons (car l2) 
-					(merge pred? l1 (cdr l2)))] 
-				 [else (cons (car l1) (merge pred? 
-							     (cdr l1) l2))]))] 
-		  [dosort (lambda (pred? ls n) 
-			    (if (= n 1) 
-				(list (car ls)) 
-				(let ([mid (quotient n 2)]) 
-				  (merge pred? (dosort pred? ls mid) 
-					 (dosort pred? 
-						 (list-tail ls mid) 
-						 (- n mid))))))]) 
-	   (sort > '(3 8 1 4 2 5 6))))
-	)])
-      (display-results correct answers equal?)))
+  (let ([correct '(
+                   (8 6 5 4 3 2 1)
+                   )]
+        [answers 
+         (list 
+          (eval-one-exp ' 
+           (letrec ([sort (lambda (pred? l) 
+                            (if (null? l) l 
+                                (dosort pred? l (length l))))] 
+                    [merge (lambda (pred? l1 l2) 
+                             (cond [(null? l1) l2] 
+                                   [(null? l2) l1] 
+                                   [(pred? (car l2) (car l1)) 
+                                    (cons (car l2) 
+                                          (merge pred? l1 (cdr l2)))] 
+                                   [else (cons (car l1) (merge pred? 
+                                                               (cdr l1) l2))]))] 
+                    [dosort (lambda (pred? ls n) 
+                              (if (= n 1) 
+                                  (list (car ls)) 
+                                  (let ([mid (quotient n 2)]) 
+                                    (merge pred? (dosort pred? ls mid) 
+                                           (dosort pred? 
+                                                   (list-tail ls mid) 
+                                                   (- n mid))))))]) 
+             (sort > '(3 8 1 4 2 5 6))))
+          )])
+    (display-results correct answers equal?)))
 
 
 (define (test-subst-leftmost)
   (let ([correct '(
-		     (((a b (c () (d new (f g)) h)) i))
-		     )]
-	[answers 
-	 (list
-	 (eval-one-exp '
-	  (letrec (
-		   [apply-continuation  (lambda (k . list-of-values)
-					  (apply k list-of-values))]
-		   [subst-left-cps
-		    (lambda (new old slist changed unchanged)
-		      (let loop ([slist slist] 
-				 [changed changed] 
-				 [unchanged unchanged])
-			(cond
-			 [(null? slist) (apply-continuation unchanged)]
-			 [(symbol? (car slist))
-			  (if (eq? (car slist) old)
-			      (apply-continuation changed (cons new (cdr slist)))
-			      (loop (cdr slist)
-				    (lambda (changed-cdr)
-				      (apply-continuation changed 
-							  (cons (car slist) changed-cdr)))
-				    unchanged))]
-			 [else 
-			  (loop (car slist)
-				(lambda (changed-car)
-				  (apply-continuation changed 
-						      (cons changed-car (cdr slist))))
-				(lambda () 
-				  (loop (cdr slist)
-					(lambda (changed-cdr)
-					  (apply-continuation changed 
-							      (cons (car slist) changed-cdr)))
-					unchanged)))])))])
-	    (let ([s '((a b (c ()  (d e (f g)) h)) i)])
-	      (subst-left-cps 'new 'e s
-			      (lambda (changed-s)
-				(subst-left-cps 'new 'q s 
-						(lambda (wont-be-changed) 'whocares)
-						(lambda () (list changed-s))))
-			      (lambda () "It's an error to get here"))))))])
+                   (((a b (c () (d new (f g)) h)) i))
+                   )]
+        [answers 
+         (list
+          (eval-one-exp '
+           (letrec (
+                    [apply-continuation  (lambda (k . list-of-values)
+                                           (apply k list-of-values))]
+                    [subst-left-cps
+                     (lambda (new old slist changed unchanged)
+                       (let loop ([slist slist] 
+                                  [changed changed] 
+                                  [unchanged unchanged])
+                         (cond
+                          [(null? slist) (apply-continuation unchanged)]
+                          [(symbol? (car slist))
+                           (if (eq? (car slist) old)
+                               (apply-continuation changed (cons new (cdr slist)))
+                               (loop (cdr slist)
+                                     (lambda (changed-cdr)
+                                       (apply-continuation changed 
+                                                           (cons (car slist) changed-cdr)))
+                                     unchanged))]
+                          [else 
+                           (loop (car slist)
+                                 (lambda (changed-car)
+                                   (apply-continuation changed 
+                                                       (cons changed-car (cdr slist))))
+                                 (lambda () 
+                                   (loop (cdr slist)
+                                         (lambda (changed-cdr)
+                                           (apply-continuation changed 
+                                                               (cons (car slist) changed-cdr)))
+                                         unchanged)))])))])
+             (let ([s '((a b (c ()  (d e (f g)) h)) i)])
+               (subst-left-cps 'new 'e s
+                               (lambda (changed-s)
+                                 (subst-left-cps 'new 'q s 
+                                                 (lambda (wont-be-changed) 'whocares)
+                                                 (lambda () (list changed-s))))
+                               (lambda () "It's an error to get here"))))))])
     (display-results correct answers equal?)))
 
 (define (test-primitive-procedures)

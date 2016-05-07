@@ -4,6 +4,8 @@
   (lambda (form)
     (eval-exp form init-env)))
 
+(define reset-global-env (lambda () (void)))
+
 ;; eval-exp is the main component of the interpreter
 
 (define eval-exp

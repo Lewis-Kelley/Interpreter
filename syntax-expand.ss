@@ -11,6 +11,7 @@
                                                  (list (1st args))
                                                  (list (syntax-expand (let*-exp
                                                                        (cdr vars)
+                                                                       (cdr args)
                                                                        body))))))]
            [letrec-exp (vars args body)
                        (syntax-expand
