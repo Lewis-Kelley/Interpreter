@@ -4,7 +4,12 @@
   (lambda (form)
     (eval-exp form init-env)))
 
-(define reset-global-env (lambda () (void)))
+(define reset-global-env (lambda () (set! init-env
+                                      (extend-env            ; procedure names.  Recall that an environment associates
+                                       *prim-proc-names*   ;  a value (not an expression) with an identifier.
+                                       (map prim-proc
+                                            *prim-proc-names*)
+                                       (empty-env)))))
 
 ;; eval-exp is the main component of the interpreter
 
