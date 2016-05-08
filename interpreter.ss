@@ -61,8 +61,8 @@
                        (void))]
            [app-exp (rator rands)
                     (let ([proc-value (eval-exp rator env)]
-                          [args (eval-rands rands env)])
-                      (apply-proc proc-value args))]
+                          [args rands])
+                      (apply-proc proc-value args env))]
            [lambda-exp (pars body)
                        (closure pars body env)]
            [list-pars-lambda-exp (pars body)
@@ -104,9 +104,9 @@
         (cons (car ls) (list-cutoff (cdr ls) (- len 1))))))
 
 (define apply-proc
-  (lambda (proc-value args)
+  (lambda (proc-value args cur-env)
     (cases proc-val proc-value
-           [prim-proc (op) (apply-prim-proc op args)]
+           [prim-proc (op) (apply-prim-proc op args cur-env)]
            [closure (pars body env)
                     (let ((env (extended-env-record
                                 (map car pars)
@@ -114,7 +114,7 @@
                                   (if (null? pars)
                                       '()
                                       (if (cdr (1st pars))
-                                          (cons (apply-env-ref env
+                                          (cons (apply-env-ref cur-env
                                                                (1st args)
                                                                (lambda (x) x)
                                                                (lambda ()
@@ -122,7 +122,7 @@
                                                                              "Couldn't find ~s\n"
                                                                              (1st args))))
                                                 (build-args (cdr pars) (cdr args)))
-                                          (cons (box (1st args))
+                                          (cons (box (eval-exp (1st args) cur-env))
                                                 (build-args (cdr pars) (cdr args))))))
                                 env)))
                       (let loop ((ls body))
@@ -130,14 +130,14 @@
                             (begin (eval-exp (car ls) env) (loop (cdr ls)))
                             (eval-exp (car ls) env))))]
            [list-closure (pars body env)
-                         (let ((env (extend-env (list pars) (list args) env)))
+                         (let ((env (extend-env (list pars) (list (map (lambda (x) (eval-exp x cur-env)) args)) env)))
                            (let loop ((ls body))
                              (if (not (null? (cdr ls)))
                                  (begin (eval-exp (car ls) env) (loop (cdr ls)))
                                  (eval-exp (car ls) env))))]
            [improper-list-closure (pars body env)
                                   (let ((pars (i-list->list pars)))
-                                    (let ((env (extend-env pars (list-cutoff args (- (length pars) 1)) env)))
+                                    (let ((env (extend-env pars (list-cutoff (map (lambda (x) (eval-exp x cur-env)) args) (- (length pars) 1)) env)))
                                       (let loop ((ls body))
                                         (if (not (null? (cdr ls)))
                                             (begin (eval-exp (car ls) env) (loop (cdr ls)))
@@ -164,10 +164,10 @@
 
 (define arg-test
   (lambda (pred?)
-    (lambda (sym args)
+    (lambda (sym args cur-env)
       (if (not (pred? args))
           (eopl:error 'apply-prim-proc "Invalid arguments to ~s: ~s" sym args)
-          (apply (eval sym) args)))))
+          (apply (eval sym) (map (lambda (x) (eval-exp x cur-env)) args))))))
 
 (define zero-arg
   (arg-test (lambda (args) (null? args))))
@@ -194,7 +194,7 @@
 (define any-arg (arg-test (lambda (args) #t)))
 
 (define apply-prim-proc
-  (lambda (prim-proc args)
+  (lambda (prim-proc args cur-env)
     ((case prim-proc
        [(+) any-arg]
        [(-) non-zero-arg]
@@ -222,10 +222,10 @@
        [(list->vector) one-arg]
        [(list?) one-arg]
        [(pair?) one-arg]
-       [(procedure?) (lambda (prim-proc args) ;; Effectively shadow procedure? with our proc-val?
+       [(procedure?) (lambda (prim-proc args cur-env) ;; Effectively shadow procedure? with our proc-val?
                        (if (or (null? args) (not (null? (cdr args))))
                            (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
-                           (apply proc-val? args)))]
+                           (apply proc-val? (eval-exp (1st args) cur-env))))]
        [(vector->list) one-arg]
        [(vector) any-arg]
        [(make-vector) one-two-arg]
@@ -250,18 +250,18 @@
        [(cdadr) one-arg]
        [(caddr) one-arg]
        [(cdddr) one-arg]
-       [(map) (lambda (prim-proc args)
-                (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
+       [(map) (lambda (prim-proc args cur-env)
+                (if (or (null? args) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
                     (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
                     (let loop ((args (2nd args))
                                (proc (1st args)))
                       (if (null? args)
                           '()
-                          (cons (apply-proc proc (list (car args))) (loop (cdr args) proc))))))]
-       [(apply) (lambda (prim-proc args)
+                          (cons (apply-proc (eval-exp proc cur-env) (list (car args)) cur-env) (loop (cdr args) proc))))))]
+       [(apply) (lambda (prim-proc args cur-env)
                   (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
                       (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
-                      (apply-proc (1st args) (2nd args))))]
+                      (apply-proc (eval-exp (1st args) cur-env) (2nd args) cur-env)))]
        [(member) two-arg]
        [(quotient) two-arg]
        [(eqv?) two-arg]
@@ -270,7 +270,7 @@
        [(void) zero-arg]
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
-                         prim-proc)]) prim-proc args)))
+                         prim-proc)]) prim-proc args cur-env)))
 
 (define rep      ; "read-eval-print" loop.
   (lambda ()
