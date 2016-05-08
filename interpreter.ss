@@ -108,7 +108,23 @@
     (cases proc-val proc-value
            [prim-proc (op) (apply-prim-proc op args)]
            [closure (pars body env)
-                    (let ((env (extend-env (map car pars) args env)))
+                    (let ((env (extended-env-record
+                                (map car pars)
+                                (let build-args ((pars pars) (args args))
+                                  (if (null? pars)
+                                      '()
+                                      (if (cdr (1st pars))
+                                          (cons (apply-env-ref env
+                                                               (1st args)
+                                                               (lambda (x) x)
+                                                               (lambda ()
+                                                                 (eopl:error 'apply-proc
+                                                                             "Couldn't find ~s\n"
+                                                                             (1st args))))
+                                                (build-args (cdr pars) (cdr args)))
+                                          (cons (box (1st args))
+                                                (build-args (cdr pars) (cdr args))))))
+                                env)))
                       (let loop ((ls body))
                         (if (not (null? (cdr ls)))
                             (begin (eval-exp (car ls) env) (loop (cdr ls)))
