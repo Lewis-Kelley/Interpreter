@@ -75,8 +75,8 @@
                                         ; while-exp
        ((equal? (car datum) 'while)
         (while-exp
-          (parse-exp (2nd datum))
-          (map parse-exp (cddr datum))))
+         (parse-exp (2nd datum))
+         (map parse-exp (cddr datum))))
                                         ; cond-exp
        ((equal? (car datum) 'cond)
         (if (null? (cdr datum))
@@ -172,10 +172,19 @@
          (else
 
                                         ; lambda-exp
-          (if (not ((list-of symbol?) (2nd datum)))
-              (eopl:error 'parse-exp "*lambda-exp* parameters must be symbols ~s" datum))
+          (if (not (andmap (lambda (item) (or (symbol? item) (pair? item))) (2nd datum)))
+              (eopl:error 'parse-exp "*lambda-exp* parameters must be symbols or (ref symbol) ~s" datum))
 
-          (lambda-exp (2nd datum) (map parse-exp (cddr datum))))))
+          
+          (lambda-exp (let loop ((args (2nd datum)))
+                        (if (null? args)
+                            '()
+                            (if (pair? (1st args))
+                                (cons (cons (2nd (1st args)) #t)
+                                      (loop (cdr args)))
+                                (cons (cons (1st args) #f)
+                                      (loop (cdr args))))))
+                      (map parse-exp (cddr datum))))))
                                         ;
                                         ; let's
                                         ;

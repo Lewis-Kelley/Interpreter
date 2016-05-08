@@ -108,27 +108,24 @@
     (cases proc-val proc-value
            [prim-proc (op) (apply-prim-proc op args)]
            [closure (pars body env)
-                    (let ((env (extend-env pars args env)))
+                    (let ((env (extend-env (map car pars) args env)))
                       (let loop ((ls body))
                         (if (not (null? (cdr ls)))
                             (begin (eval-exp (car ls) env) (loop (cdr ls)))
-                            (eval-exp (car ls) env))
-                        ))]
+                            (eval-exp (car ls) env))))]
            [list-closure (pars body env)
                          (let ((env (extend-env (list pars) (list args) env)))
                            (let loop ((ls body))
                              (if (not (null? (cdr ls)))
                                  (begin (eval-exp (car ls) env) (loop (cdr ls)))
-                                 (eval-exp (car ls) env))
-                             ))]
+                                 (eval-exp (car ls) env))))]
            [improper-list-closure (pars body env)
                                   (let ((pars (i-list->list pars)))
                                     (let ((env (extend-env pars (list-cutoff args (- (length pars) 1)) env)))
                                       (let loop ((ls body))
                                         (if (not (null? (cdr ls)))
                                             (begin (eval-exp (car ls) env) (loop (cdr ls)))
-                                            (eval-exp (car ls) env))
-                                        )))]
+                                            (eval-exp (car ls) env)))))]
            [else (error 'apply-proc
                         "Attempt to apply bad procedure: ~s"
                         proc-value)])))

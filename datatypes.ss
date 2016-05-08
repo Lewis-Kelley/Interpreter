@@ -5,7 +5,7 @@
   (var-exp
    (id symbol?))
   (lambda-exp
-   (pars (list-of symbol?))
+   (pars (list-of pair?))
    (body (list-of expression?)))
   (list-pars-lambda-exp
    (pars symbol?)
@@ -83,7 +83,7 @@
   [prim-proc
    (name symbol?)]
   [closure
-   (pars (list-of symbol?))
+   (pars (list-of pair?))
    (body (list-of expression?))
    (env environment?)]
   [list-closure

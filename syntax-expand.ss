@@ -2,7 +2,8 @@
   (lambda (exp)
     (cases expression exp
            [let-exp (vars args body)
-                    (app-exp (lambda-exp vars (map syntax-expand body))
+                    (app-exp (lambda-exp (map (lambda (item) (cons item #f)) vars)
+                                         (map syntax-expand body))
                              (map syntax-expand args))]
            [let*-exp (vars args body)
                      (if (null? (cdr vars))
@@ -26,7 +27,7 @@
            [named-let-exp (id vars args body)
                           (syntax-expand
                            (letrec-exp (list id)
-                                       (list (lambda-exp vars body))
+                                       (list (lambda-exp (map (lambda (item) (cons item #f)) vars) body))
                                        (list (app-exp (var-exp id) args))))]
            [cond-exp (tests bodies else-body)
                      (cond
