@@ -60,9 +60,31 @@
                        (eval-exp t-exp env)
                        (void))]
            [app-exp (rator rands)
-                    (let ([proc-value (eval-exp rator env)]
-                          [args (eval-rands rands env)])
-                      (apply-proc proc-value args))]
+                    (let ((proc-value (eval-exp rator env)))
+                      (cases proc-val proc-value
+                             (closure (pars body cl-env)
+                                      (let ((bitmask (map cdr pars)))
+                                        (apply-proc proc-value
+                                                    (let loop ((bitmask bitmask)
+                                                               (rands rands))
+                                                      (cond
+                                                       ((null? bitmask)
+                                                        '())
+                                                       ((1st bitmask)
+                                                        (cases expression? (1st rands)
+                                                               (var-exp (id)
+                                                                        (apply-env-ref env
+                                                                                       id
+                                                                                       (lambda (x) (cons x (loop (cdr bitmask) (cdr rands))))
+                                                                                       (lambda () (eopl:error 'eval-expression "couldn't find ~s" id))))
+                                                               (else
+                                                                (eopl:error 'eval-expression "Incorrect type to reference parameter."))))
+                                                       (else
+                                                        (cons (eval-exp (1st rands) env)
+                                                              (loop (cdr bitmask) (cdr rands))))))
+                                                    bitmask)))
+                             (else
+                              (apply-proc proc-value (eval-rands rands env)))))]
            [lambda-exp (pars body)
                        (closure pars body env)]
            [list-pars-lambda-exp (pars body)
@@ -104,7 +126,10 @@
         (cons (car ls) (list-cutoff (cdr ls) (- len 1))))))
 
 (define apply-proc
-  (lambda (proc-value args)
+  (case-lambda
+   ((proc-value args)
+    (apply-proc proc-value args (map (lambda (x) #f) args)))
+   ((proc-value args bitmask)
     (cases proc-val proc-value
            [prim-proc (op) (apply-prim-proc op args)]
            [closure (pars body env)
@@ -128,7 +153,7 @@
                                             (eval-exp (car ls) env)))))]
            [else (error 'apply-proc
                         "Attempt to apply bad procedure: ~s"
-                        proc-value)])))
+                        proc-value)]))))
 
 (define *prim-proc-names* '(+ - * / add1 sub1 zero? not = < > <= >= cons car
                               cdr list null? assq eq? equal? atom? length
