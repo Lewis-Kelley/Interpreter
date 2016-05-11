@@ -224,8 +224,8 @@
        [(pair?) one-arg]
        [(procedure?) (lambda (prim-proc args cur-env) ;; Effectively shadow procedure? with our proc-val?
                        (if (or (null? args) (not (null? (cdr args))))
-                           (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
-                           (apply proc-val? (eval-exp (1st args) cur-env))))]
+                           (eopl:error 'procedure "Invalid arguments to ~s: ~s" prim-proc args)
+                           (proc-val? (eval-exp (1st args) cur-env))))]
        [(vector->list) one-arg]
        [(vector) any-arg]
        [(make-vector) one-two-arg]
@@ -260,7 +260,7 @@
                           (cons (apply-proc (eval-exp proc cur-env) (list (car args)) cur-env) (loop (cdr args) proc))))))]
        [(apply) (lambda (prim-proc args cur-env)
                   (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
-                      (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
+                      (eopl:error 'apply-prim-proc "Invalid arguments to ~s: ~s" prim-proc args)
                       (apply-proc (eval-exp (1st args) cur-env) (2nd args) cur-env)))]
        [(member) two-arg]
        [(quotient) two-arg]
