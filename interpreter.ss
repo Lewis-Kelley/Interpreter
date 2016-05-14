@@ -71,7 +71,7 @@
                                                        ((null? bitmask)
                                                         '())
                                                        ((1st bitmask)
-                                                        (cases expression? (1st rands)
+                                                        (cases expression (1st rands)
                                                                (var-exp (id)
                                                                         (apply-env-ref env
                                                                                        id
@@ -133,7 +133,16 @@
     (cases proc-val proc-value
            [prim-proc (op) (apply-prim-proc op args)]
            [closure (pars body env)
-                    (let ((env (extend-env (map car pars) args env)))
+                    (let ((env (adv-extend-env (map car pars)
+                                               (let loop ((bitmask bitmask) (args args))
+                                                 (cond
+                                                  ((null? bitmask)
+                                                   '())
+                                                  ((1st bitmask)
+                                                   (cons (1st args) (loop (cdr bitmask) (cdr args))))
+                                                  (else
+                                                   (cons (box (1st args)) (loop (cdr bitmask) (cdr args))))))
+                                               env)))
                       (let loop ((ls body))
                         (if (not (null? (cdr ls)))
                             (begin (eval-exp (car ls) env) (loop (cdr ls)))

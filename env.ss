@@ -4,9 +4,13 @@
   (lambda ()
     (empty-env-record)))
 
+(define adv-extend-env
+  (lambda (syms vals env)
+    (extended-env-record syms vals env)))
+
 (define extend-env
   (lambda (syms vals env)
-    (extended-env-record syms (map box vals) env)))
+    (adv-extend-env syms (map box vals) env)))
 
 (define list-find-position
   (lambda (sym los)
