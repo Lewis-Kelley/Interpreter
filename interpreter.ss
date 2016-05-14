@@ -2,7 +2,7 @@
 
 (define top-level-eval
   (lambda (form)
-    (eval-exp form init-env)))
+    (eval-exp form init-env (empty-k))))
 
 (define reset-global-env (lambda () (set! init-env
                                       (extend-env            ; procedure names.  Recall that an environment associates
@@ -14,51 +14,28 @@
 ;; eval-exp is the main component of the interpreter
 
 (define eval-exp
-  (lambda (exp env)
+  (lambda (exp env k)
     (cases expression exp
-           [lit-exp (datum) datum]
-           [quote-exp (datum) (2nd datum)]
+           [lit-exp (datum) (apply-k k datum)]
+           [quote-exp (datum) (apply-k k (2nd datum))]
            [begin-exp (exps)
-                      (for-each (lambda (exp) (eval-exp exp env)) exps)]
+                      (eval-exp (car exps) env (begin-k k (cdr exps) env))]
            [and-exp (exps)
                     (if (null? exps)
-                        #t
-                        (let loop ((exps exps))
-                          (if (null? (cdr exps))
-                              (eval-exp (car exps) env)
-                              (if (eval-exp (car exps) env)
-                                  (loop (cdr exps))
-                                  #f))))]
+                        (apply-k k #t)
+                        (eval-exp (car exps) env (and-k k (cdr exps) env)))]
            [or-exp (exps)
                    (if (null? exps)
-                       #f
-                       (let loop ((exps exps))
-
-                         (if (null? (cdr exps))
-                             (eval-exp (car exps) env)
-                             (let ((res (eval-exp (car exps) env)))
-                               (if res
-                                   res
-                                   (loop (cdr exps)))))))]
-           [while-exp (test bodies)
-                      (let loop ()
-                        (if (eval-exp test env)
-                            (begin (for-each (lambda (exp) (eval-exp exp env)) bodies)
-                                   (loop))))]
+                       (apply-k k #f)
+                       (eval-exp (car exps) env (or-k k (cdr exps) env))]
            [var-exp (id)
                     (apply-env env id; look up its value.
-                               (lambda (x) x) ; procedure to call if id is in the environment
-                               (lambda () (eopl:error 'apply-env ; procedure to call if id not in env
-                                                      "variable not found in environment: ~s"
-                                                      id)))]
+                               k ; procedure to call if id is in the environment
+                               (error-k (format "Failed to lookup ~s" id)))]
            [if-else-exp (test t-exp f-exp)
-                        (if (eval-exp test env)
-                            (eval-exp t-exp env)
-                            (eval-exp f-exp env))]
+                        (eval-exp test env (if-else-k k t-exp f-exp))]
            [if-exp (test t-exp)
-                   (if (eval-exp test env)
-                       (eval-exp t-exp env)
-                       (void))]
+                   (eval-exp test env (if-else-k k t-exp (app-exp (var-exp void) '())))]
            [app-exp (rator rands)
                     (let ((proc-value (eval-exp rator env)))
                       (cases proc-val proc-value
@@ -171,7 +148,7 @@
                               set-car! set-cdr! vector-set! display newline
                               caar cadr cdar cddr caaar caadr cadar cdaar
                               caddr cdadr cddar cdddr map apply member quotient
-                              eqv? append list-tail void))
+                              eqv? append list-tail void display newline))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -286,6 +263,8 @@
        [(append) any-arg]
        [(list-tail) two-arg]
        [(void) zero-arg]
+       [(display) one-arg]
+       [(newline) zero-arg]
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
                          prim-proc)]) prim-proc args)))

@@ -118,4 +118,50 @@
    (vals (list-of scheme-value?))
    (env environment?)))
 
+(define-datatype continuation continuation?
+  (empty-k)
+  (begin-k
+    (k continuation?)
+    (exps (list-of expression?))
+    (env environment?))
+  (and-k
+    (k continuation?)
+    (exps (list-of expression?))
+    (env environment?))
+  (or-k
+    (k continuation?)
+    (exps (list-of expression?))
+    (env environment?))
+  (error-k
+    (message string?))
+  (if-else-k
+    (k continuation?)
+    (true-exp expression?)
+    (false-exp expression?))
+  )
+
+(define apply-k
+  (lambda (k v)
+    (cases continuation k
+      [empty-k () v]
+      [begin-k (k exps env)
+        (if (null? exps)
+          (apply-k k v)
+          (eval-exp (car exps) env (begin-k k (cdr exps) env)))]
+      [and-k (k exps env)
+        (if (or (null? exps) (not v))
+          (apply-k k v)
+          (eval-exp (car exps) env (and-k k (cdr exps) env)))]
+      [or-k (k exps env)
+        (if (or (null? exps) v)
+          (apply-k k v)
+          (eval-exp (car exps) env (or-k k (cdr exps) env)))]
+      [error-k (message)
+        (eopl:error 'apply-env message)]
+      [if-else-k (k t-exp f-exp)
+        (if v
+          (eval-exp t-exp env k)
+          (eval-exp f-exp env k))]
+      )))
+
 
