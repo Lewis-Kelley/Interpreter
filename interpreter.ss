@@ -33,10 +33,11 @@
                                k ; procedure to call if id is in the environment
                                (error-k (format "Failed to lookup ~s" id)))]
            [if-else-exp (test t-exp f-exp)
-                        (eval-exp test env (if-else-k k t-exp f-exp))]
+                        (eval-exp test env (if-else-k k env t-exp f-exp))]
            [if-exp (test t-exp)
-                   (eval-exp test env (if-else-k k t-exp (app-exp (var-exp void) '())))]
+                   (eval-exp test env (if-else-k k env t-exp (app-exp (var-exp void) '())))]
            [app-exp (rator rands)
+                    (printf "rator = ~s\nrands = ~s\nk = ~s" rator rands k)
                     (eval-exp rator env (app-exp-k k rands env))]
            [lambda-exp (pars body)
                        (apply-k k (closure pars body env))]
@@ -53,8 +54,10 @@
 ;; evaluate the list of operands, putting results into a list
 
 (define eval-rands
-  (lambda (rands env)
-    (map (lambda (x) (eval-exp x env)) rands)))
+  (lambda (rands env k)
+    (if (null? rands)
+        (apply-k k '())
+        (eval-rands (cdr rands) env (eval-rands-k k (car rands))))))
 
 ;; Converts an improper list to a proper list.
 ;; WARNING: Does not check if the argument is actually improper.
@@ -62,7 +65,7 @@
 (define i-list->list
   (lambda (i-list k)
     (if (pair? (cdr i-list))
-        (i-list->list (cdr i-list) (i-list->list-k k (car i-list)))
+        (i-list->list (cdr i-list) (form-list-k k (car i-list)))
         (apply-k k i-list))))
 
 ;; Takes a list and a target length. Returns the contents of
@@ -72,10 +75,11 @@
   (lambda (ls len k)
     (if (equal? len 1)
         (apply-k k (list (car ls) (cdr ls)))
-        (list-cutoff (cdr ls) (- len 1) (list-cutoff-k k (car ls))))))
+        (list-cutoff (cdr ls) (- len 1) (form-list-k k (car ls))))))
 
 (define apply-proc
   (lambda (proc-value args k)
+    (display "hello\n")
     (cases proc-val proc-value
            [prim-proc (op) (apply-prim-proc op args k)]
            [closure (pars body env)
@@ -107,6 +111,7 @@
 (define arg-test
   (lambda (pred?)
     (lambda (sym args k)
+      (printf "sym = ~s\nk = ~s" sym k)
       (if (not (pred? args))
           (eopl:error 'apply-prim-proc "Invalid arguments to ~s: ~s" sym args)
           (apply-k k (apply (eval sym) args))))))
@@ -192,18 +197,15 @@
        [(cdadr) one-arg]
        [(caddr) one-arg]
        [(cdddr) one-arg]
-       [(map) (lambda (prim-proc args)
-                (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
+       [(map) (lambda (prim-proc args k)
+                (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args))
+                        (not (list? (2nd args))) (not (null? (cddr args))))
                     (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
-                    (let loop ((args (2nd args))
-                               (proc (1st args)))
-                      (if (null? args)
-                          '()
-                          (cons (apply-proc proc (list (car args))) (loop (cdr args) proc))))))]
-       [(apply) (lambda (prim-proc args)
+                    (prim-proc-map-cps (1st args) (cdr args) k)))]
+       [(apply) (lambda (prim-proc args k)
                   (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
                       (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
-                      (apply-proc (1st args) (2nd args))))]
+                      (apply-proc (1st args) (2nd args) k)))]
        [(member) two-arg]
        [(quotient) two-arg]
        [(eqv?) two-arg]
@@ -215,6 +217,13 @@
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
                          prim-proc)]) prim-proc args k)))
+
+(define prim-proc-map-cps
+  (lambda (proc args k)
+    (if (null? args)
+        (apply-k '())
+        (prim-proc-map-cps proc (cdr args) (map-k k proc (1st args))))))
+
 
 (define rep      ; "read-eval-print" loop.
   (lambda ()

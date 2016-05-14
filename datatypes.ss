@@ -136,6 +136,7 @@
    (message string?))
   (if-else-k
    (k continuation?)
+   (env environment?)
    (true-exp expression?)
    (false-exp expression?))
   (apply-set-ref!-k
@@ -153,30 +154,36 @@
    (k continuation?)
    (rands (list-of expression?))
    (env environment?))
+  (app-proc-rands-k
+   (k continuation?)
+   (proc-val proc-value?))
   (eval-rands-k
    (k continuation?)
-   (head (lambda (x) #t)))
-  (i-list->list-k
+   (env environment?)
+   (head expression?))
+  (eval-rands-cons-k
    (k continuation?)
-   (head (lambda (x) #t)))
-  (list-cutoff-k
+   (tail list?))
+  (form-list-k
    (k continuation?)
    (head (lambda (x) #t)))
   (list-to-cutoff-k
-    (k continuation?)
-    (args (list-of expression?))
-    (env environment?)
-    (body (list-of expression?)))
+   (k continuation?)
+   (args (list-of expression?))
+   (env environment?)
+   (body (list-of expression?)))
   (cutoff-to-eval-k
-    (k continuation?)
-    (env environment?)
-    (pars (list-of symbol?))
-    (body (list-of expression?)))
+   (k continuation?)
+   (env environment?)
+   (pars (list-of symbol?))
+   (body (list-of expression?)))
   (map-k
-    (k continuation?)
-    (args (list-of (lambda (x) #t)))
-    (evaled-list (list-of (lambda (x) #t))))
-  )
+   (k continuation?)
+   (proc proc-val?)
+   (head (lambda (x) #t)))
+  (map-cons-k
+   (k continuation?)
+   (tail list?)))
 
 (define apply-k
   (lambda (k v)
@@ -196,7 +203,7 @@
                      (eval-exp (car exps) env (or-k k (cdr exps) env)))]
            [error-k (message)
                     (eopl:error 'apply-env message)]
-           [if-else-k (k t-exp f-exp)
+           [if-else-k (k env t-exp f-exp)
                       (if v
                           (eval-exp t-exp env k)
                           (eval-exp f-exp env k))]
@@ -215,18 +222,17 @@
                                               '()))]
            [app-proc-rands-k (k proc-value)
                              (apply-proc proc-value v k)]
-           [eval-rands-k (k head)
-                             (apply-k k (cons head v))]
-           [i-list->list-k (k head)
-                           (apply-k k (cons head v))]
-           [list-cutoff-k (k head)
-                          (apply-k k (cons head v))]
+           [eval-rands-k (k env head)
+                         (eval-exp head env (eval-rands-cons-k k v))]
+           [eval-rands-cons-k (k tail)
+                              (apply-k k (cons v tail))]
+           [form-list-k (k head)
+                        (apply-k k (cons head v))]
            [list-to-cutoff-k (k args env body)
-              (list-cutoff args (- (length v) 1) (cutoff-to-eval-k k env v body))]
-            [cutoff-to-eval-k (k env pars body)
-              (eval-exp (car body) (extend-env pars v env) (begin-k k (cdr body)))]
-            [map-k (k args evaled-list)
-              (if (null? args)
-                 (apply-k k (append evaled-list (list v)))
-                 (eval-exp (car rands) env (eval-rands-k k (cdr rands) env (cons v evaled-list))))])))
-
+                             (list-cutoff args (- (length v) 1) (cutoff-to-eval-k k env v body))]
+           [cutoff-to-eval-k (k env pars body)
+                             (eval-exp (car body) (extend-env pars v env) (begin-k k (cdr body)))]
+           [map-k (k proc head)
+                  (apply-proc proc (list head) (map-cons-k k v))]
+           [map-cons-k (k tail)
+                       (apply-k k (cons v tail))])))
