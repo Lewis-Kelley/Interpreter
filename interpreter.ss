@@ -83,12 +83,7 @@
            [list-closure (pars body env)
                          (eval-exp (car body) (extend-env (list pars) (list args) env) (begin-k k (cdr body)))]
            [improper-list-closure (pars body env)
-                                  (let ((pars (i-list->list pars)))
-                                    (let ((env (extend-env pars (list-cutoff args (- (length pars) 1)) env)))
-                                      (let loop ((ls body))
-                                        (if (not (null? (cdr ls)))
-                                            (begin (eval-exp (car ls) env) (loop (cdr ls)))
-                                            (eval-exp (car ls) env)))))]
+                          (i-list->list pars (list-to-cutoff-k k args env body))]
            [else (error 'apply-proc
                         "Attempt to apply bad procedure: ~s"
                         proc-value)])))
@@ -111,10 +106,10 @@
 
 (define arg-test
   (lambda (pred?)
-    (lambda (sym args)
+    (lambda (sym args k)
       (if (not (pred? args))
           (eopl:error 'apply-prim-proc "Invalid arguments to ~s: ~s" sym args)
-          (apply (eval sym) args)))))
+          (apply-k k (apply (eval sym) args))))))
 
 (define zero-arg
   (arg-test (lambda (args) (null? args))))
@@ -141,7 +136,7 @@
 (define any-arg (arg-test (lambda (args) #t)))
 
 (define apply-prim-proc
-  (lambda (prim-proc args)
+  (lambda (prim-proc args k)
     ((case prim-proc
        [(+) any-arg]
        [(-) non-zero-arg]
@@ -219,7 +214,7 @@
        [(newline) zero-arg]
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
-                         prim-proc)]) prim-proc args)))
+                         prim-proc)]) prim-proc args k)))
 
 (define rep      ; "read-eval-print" loop.
   (lambda ()

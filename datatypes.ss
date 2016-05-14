@@ -155,15 +155,28 @@
    (env environment?))
   (eval-rands-k
    (k continuation?)
-   (rands (list-of expression?))
-   (env environment?)
-   (evaled-list list?))
+   (head (lambda (x) #t)))
   (i-list->list-k
    (k continuation?)
    (head (lambda (x) #t)))
   (list-cutoff-k
    (k continuation?)
-   (head (lambda (x) #t))))
+   (head (lambda (x) #t)))
+  (list-to-cutoff-k
+    (k continuation?)
+    (args (list-of expression?))
+    (env environment?)
+    (body (list-of expression?)))
+  (cutoff-to-eval-k
+    (k continuation?)
+    (env environment?)
+    (pars (list-of symbol?))
+    (body (list-of expression?)))
+  (map-k
+    (k continuation?)
+    (args (list-of (lambda (x) #t)))
+    (evaled-list (list-of (lambda (x) #t))))
+  )
 
 (define apply-k
   (lambda (k v)
@@ -202,12 +215,18 @@
                                               '()))]
            [app-proc-rands-k (k proc-value)
                              (apply-proc proc-value v k)]
-           [eval-rands-k (k rands env evaled-list)
-                         (if (null? rands)
-                             (apply-k k (cons v evaled-list))
-                             (eval-exp (car rands) env (eval-rands-k k (cdr rands) env (cons v evaled-list))))]
+           [eval-rands-k (k head)
+                             (apply-k k (cons head v))]
            [i-list->list-k (k head)
                            (apply-k k (cons head v))]
            [list-cutoff-k (k head)
-                          (apply-k k (cons head v))])))
+                          (apply-k k (cons head v))]
+           [list-to-cutoff-k (k args env body)
+              (list-cutoff args (- (length v) 1) (cutoff-to-eval-k k env v body))]
+            [cutoff-to-eval-k (k env pars body)
+              (eval-exp (car body) (extend-env pars v env) (begin-k k (cdr body)))]
+            [map-k (k args evaled-list)
+              (if (null? args)
+                 (apply-k k (append evaled-list (list v)))
+                 (eval-exp (car rands) env (eval-rands-k k (cdr rands) env (cons v evaled-list))))])))
 
