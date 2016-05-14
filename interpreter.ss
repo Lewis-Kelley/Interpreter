@@ -27,7 +27,7 @@
            [or-exp (exps)
                    (if (null? exps)
                        (apply-k k #f)
-                       (eval-exp (car exps) env (or-k k (cdr exps) env))]
+                       (eval-exp (car exps) env (or-k k (cdr exps) env)))]
            [var-exp (id)
                     (apply-env env id; look up its value.
                                k ; procedure to call if id is in the environment
@@ -37,43 +37,15 @@
            [if-exp (test t-exp)
                    (eval-exp test env (if-else-k k t-exp (app-exp (var-exp void) '())))]
            [app-exp (rator rands)
-                    (let ((proc-value (eval-exp rator env)))
-                      (cases proc-val proc-value
-                             (closure (pars body cl-env)
-                                      (let ((bitmask (map cdr pars)))
-                                        (apply-proc proc-value
-                                                    (let loop ((bitmask bitmask)
-                                                               (rands rands))
-                                                      (cond
-                                                       ((null? bitmask)
-                                                        '())
-                                                       ((1st bitmask)
-                                                        (cases expression (1st rands)
-                                                               (var-exp (id)
-                                                                        (apply-env-ref env
-                                                                                       id
-                                                                                       (lambda (x) (cons x (loop (cdr bitmask) (cdr rands))))
-                                                                                       (lambda () (eopl:error 'eval-expression "couldn't find ~s" id))))
-                                                               (else
-                                                                (eopl:error 'eval-expression "Incorrect type to reference parameter."))))
-                                                       (else
-                                                        (cons (eval-exp (1st rands) env)
-                                                              (loop (cdr bitmask) (cdr rands))))))
-                                                    bitmask)))
-                             (else
-                              (apply-proc proc-value (eval-rands rands env)))))]
+                    (eval-exp rator env (app-exp-k k rands env))]
            [lambda-exp (pars body)
-                       (closure pars body env)]
+                       (apply-k k (closure pars body env))]
            [list-pars-lambda-exp (pars body)
-                                 (list-closure pars body env)]
+                                 (apply-k k (list-closure pars body env))]
            [improper-pars-lambda-exp (pars body)
-                                     (improper-list-closure pars body env)]
+                                     (apply-k k (improper-list-closure pars body env))]
            [set!-exp (id exp)
-                     (set-ref!
-                      (apply-env-ref env id (lambda (x) x) (lambda () (eopl:error 'apply-env ; procedure to call if id not in env
-                                                                                  "variable not found in environment: ~s"
-                                                                                  id)))
-                      (eval-exp exp env))]
+                     (apply-env-ref env id (apply-set-ref!-k k exp env) (error-k (format "Failed to lookup ~s" id)))]
            [define-exp (sym val)
              (append-env env sym (box (eval-exp val env)))]
            [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
@@ -88,48 +60,28 @@
 ;; WARNING: Does not check if the argument is actually improper.
 ;;          This _will_ break!
 (define i-list->list
-  (lambda (i-list)
+  (lambda (i-list k)
     (if (pair? (cdr i-list))
-        (cons (car i-list) (i-list->list (cdr i-list)))
-        (list (car i-list) (cdr i-list)))))
+        (i-list->list (cdr i-list) (i-list->list-k k (car i-list)))
+        (apply-k k i-list))))
 
 ;; Takes a list and a target length. Returns the contents of
 ;; the list in a shortened list where there are len + 1 elements
 ;; with the last being a list of the leftovers.
 (define list-cutoff
-  (lambda (ls len)
+  (lambda (ls len k)
     (if (equal? len 1)
-        (list (car ls) (cdr ls))
-        (cons (car ls) (list-cutoff (cdr ls) (- len 1))))))
+        (apply-k k (list (car ls) (cdr ls)))
+        (list-cutoff (cdr ls) (- len 1) (list-cutoff-k k (car ls))))))
 
 (define apply-proc
-  (case-lambda
-   ((proc-value args)
-    (apply-proc proc-value args (map (lambda (x) #f) args)))
-   ((proc-value args bitmask)
+  (lambda (proc-value args k)
     (cases proc-val proc-value
-           [prim-proc (op) (apply-prim-proc op args)]
+           [prim-proc (op) (apply-prim-proc op args k)]
            [closure (pars body env)
-                    (let ((env (adv-extend-env (map car pars)
-                                               (let loop ((bitmask bitmask) (args args))
-                                                 (cond
-                                                  ((null? bitmask)
-                                                   '())
-                                                  ((1st bitmask)
-                                                   (cons (1st args) (loop (cdr bitmask) (cdr args))))
-                                                  (else
-                                                   (cons (box (1st args)) (loop (cdr bitmask) (cdr args))))))
-                                               env)))
-                      (let loop ((ls body))
-                        (if (not (null? (cdr ls)))
-                            (begin (eval-exp (car ls) env) (loop (cdr ls)))
-                            (eval-exp (car ls) env))))]
+                    (eval-exp (car body) (extend-env (map car pars) (map ref args) env) (begin-k k (cdr body)))]
            [list-closure (pars body env)
-                         (let ((env (extend-env (list pars) (list args) env)))
-                           (let loop ((ls body))
-                             (if (not (null? (cdr ls)))
-                                 (begin (eval-exp (car ls) env) (loop (cdr ls)))
-                                 (eval-exp (car ls) env))))]
+                         (eval-exp (car body) (extend-env (list pars) (list args) env) (begin-k k (cdr body)))]
            [improper-list-closure (pars body env)
                                   (let ((pars (i-list->list pars)))
                                     (let ((env (extend-env pars (list-cutoff args (- (length pars) 1)) env)))
@@ -139,7 +91,7 @@
                                             (eval-exp (car ls) env)))))]
            [else (error 'apply-proc
                         "Attempt to apply bad procedure: ~s"
-                        proc-value)]))))
+                        proc-value)])))
 
 (define *prim-proc-names* '(+ - * / add1 sub1 zero? not = < > <= >= cons car
                               cdr list null? assq eq? equal? atom? length

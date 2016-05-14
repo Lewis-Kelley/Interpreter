@@ -26,6 +26,10 @@
                  (+ 1 list-index-r)
                  #f))))))
 
+(define ref box)
+
+(define ref? box?)
+
 (define deref unbox)
 
 (define set-ref! set-box!)

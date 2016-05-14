@@ -46,21 +46,21 @@
   (begin-exp
    (exps (list-of expression?)))
   (and-exp
-    (exps (list-of expression?)))
+   (exps (list-of expression?)))
   (or-exp
-    (exps (list-of expression?)))
+   (exps (list-of expression?)))
   (cond-exp
    (tests (list-of expression?))
    (bodies (list-of (list-of expression?)))
    (else-body (list-of expression?)))
   (case-exp
-    (exp expression?)
-    (tests (list-of (list-of expression?)))
-    (bodies (list-of (list-of expression?)))
-    (else-body (list-of expression?)))
+   (exp expression?)
+   (tests (list-of (list-of expression?)))
+   (bodies (list-of (list-of expression?)))
+   (else-body (list-of expression?)))
   (while-exp
-    (test expression?)
-    (body (list-of expression?)))
+   (test expression?)
+   (body (list-of expression?)))
   (define-exp
     (sym symbol?)
     (val expression?))
@@ -121,47 +121,93 @@
 (define-datatype continuation continuation?
   (empty-k)
   (begin-k
-    (k continuation?)
-    (exps (list-of expression?))
-    (env environment?))
+   (k continuation?)
+   (exps (list-of expression?))
+   (env environment?))
   (and-k
-    (k continuation?)
-    (exps (list-of expression?))
-    (env environment?))
+   (k continuation?)
+   (exps (list-of expression?))
+   (env environment?))
   (or-k
-    (k continuation?)
-    (exps (list-of expression?))
-    (env environment?))
+   (k continuation?)
+   (exps (list-of expression?))
+   (env environment?))
   (error-k
-    (message string?))
+   (message string?))
   (if-else-k
+   (k continuation?)
+   (true-exp expression?)
+   (false-exp expression?))
+  (apply-set-ref!-k
+   (k continuation?)
+   (exp expression?)
+   (env environment?))
+  (eval-set-ref!-k
+   (k continuation?)
+   (var ref?))
+  (define-k
     (k continuation?)
-    (true-exp expression?)
-    (false-exp expression?))
-  )
+    (sym symbol?)
+    (env environment?))
+  (app-exp-k
+   (k continuation?)
+   (rands (list-of expression?))
+   (env environment?))
+  (eval-rands-k
+   (k continuation?)
+   (rands (list-of expression?))
+   (env environment?)
+   (evaled-list list?))
+  (i-list->list-k
+   (k continuation?)
+   (head (lambda (x) #t)))
+  (list-cutoff-k
+   (k continuation?)
+   (head (lambda (x) #t))))
 
 (define apply-k
   (lambda (k v)
     (cases continuation k
-      [empty-k () v]
-      [begin-k (k exps env)
-        (if (null? exps)
-          (apply-k k v)
-          (eval-exp (car exps) env (begin-k k (cdr exps) env)))]
-      [and-k (k exps env)
-        (if (or (null? exps) (not v))
-          (apply-k k v)
-          (eval-exp (car exps) env (and-k k (cdr exps) env)))]
-      [or-k (k exps env)
-        (if (or (null? exps) v)
-          (apply-k k v)
-          (eval-exp (car exps) env (or-k k (cdr exps) env)))]
-      [error-k (message)
-        (eopl:error 'apply-env message)]
-      [if-else-k (k t-exp f-exp)
-        (if v
-          (eval-exp t-exp env k)
-          (eval-exp f-exp env k))]
-      )))
-
+           [empty-k () v]
+           [begin-k (k exps env)
+                    (if (null? exps)
+                        (apply-k k v)
+                        (eval-exp (car exps) env (begin-k k (cdr exps) env)))]
+           [and-k (k exps env)
+                  (if (or (null? exps) (not v))
+                      (apply-k k v)
+                      (eval-exp (car exps) env (and-k k (cdr exps) env)))]
+           [or-k (k exps env)
+                 (if (or (null? exps) v)
+                     (apply-k k v)
+                     (eval-exp (car exps) env (or-k k (cdr exps) env)))]
+           [error-k (message)
+                    (eopl:error 'apply-env message)]
+           [if-else-k (k t-exp f-exp)
+                      (if v
+                          (eval-exp t-exp env k)
+                          (eval-exp f-exp env k))]
+           [apply-set-ref!-k (k exp env)
+                             (eval-exp exp env (eval-set-ref!-k k v))]
+           [eval-set-ref!-k (k var)
+                            (apply-k k (set-ref! var v))]
+           [define-k (k sym env)
+             (apply-k k (append-env sym (ref v)))]
+           [app-exp-k (k rands env)
+                      (eval-exp (car rands)
+                                env
+                                (eval-rands-k (app-proc-rands-k k v)
+                                              env
+                                              (cdr rands)
+                                              '()))]
+           [app-proc-rands-k (k proc-value)
+                             (apply-proc proc-value v k)]
+           [eval-rands-k (k rands env evaled-list)
+                         (if (null? rands)
+                             (apply-k k (cons v evaled-list))
+                             (eval-exp (car rands) env (eval-rands-k k (cdr rands) env (cons v evaled-list))))]
+           [i-list->list-k (k head)
+                           (apply-k k (cons head v))]
+           [list-cutoff-k (k head)
+                          (apply-k k (cons head v))])))
 
