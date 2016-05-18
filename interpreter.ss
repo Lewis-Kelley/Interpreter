@@ -37,7 +37,6 @@
            [if-exp (test t-exp)
                    (eval-exp test env (if-else-k k env t-exp (app-exp (var-exp void) '())))]
            [app-exp (rator rands)
-                    (printf "rator = ~s\nrands = ~s\nk = ~s" rator rands k)
                     (eval-exp rator env (app-exp-k k rands env))]
            [lambda-exp (pars body)
                        (apply-k k (closure pars body env))]
@@ -79,7 +78,6 @@
 
 (define apply-proc
   (lambda (proc-value args k)
-    (display "hello\n")
     (cases proc-val proc-value
            [prim-proc (op) (apply-prim-proc op args k)]
            [closure (pars body env)
@@ -111,7 +109,6 @@
 (define arg-test
   (lambda (pred?)
     (lambda (sym args k)
-      (printf "sym = ~s\nk = ~s" sym k)
       (if (not (pred? args))
           (eopl:error 'apply-prim-proc "Invalid arguments to ~s: ~s" sym args)
           (apply-k k (apply (eval sym) args))))))
@@ -169,10 +166,10 @@
        [(list->vector) one-arg]
        [(list?) one-arg]
        [(pair?) one-arg]
-       [(procedure?) (lambda (prim-proc args) ;; Effectively shadow procedure? with our proc-val?
+       [(procedure?) (lambda (prim-proc args k) ;; Effectively shadow procedure? with our proc-val?
                        (if (or (null? args) (not (null? (cdr args))))
-                           (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
-                           (apply proc-val? args)))]
+                           (eopl:error 'apply-prim-proc "Invalid arguments to ~s: ~s" prim-proc args)
+                           (apply-k k (apply proc-val? args))))]
        [(vector->list) one-arg]
        [(vector) any-arg]
        [(make-vector) one-two-arg]

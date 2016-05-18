@@ -156,14 +156,14 @@
    (env environment?))
   (app-proc-rands-k
    (k continuation?)
-   (proc-val proc-value?))
+   (proc-val proc-val?))
   (eval-rands-k
    (k continuation?)
    (env environment?)
-   (head expression?))
+   (tail (list-of expression?)))
   (eval-rands-cons-k
    (k continuation?)
-   (tail list?))
+   (tail (lambda (x) #t)))
   (form-list-k
    (k continuation?)
    (head (lambda (x) #t)))
@@ -183,7 +183,9 @@
    (head (lambda (x) #t)))
   (map-cons-k
    (k continuation?)
-   (tail list?)))
+   (tail list?))
+  (deref-k
+   (k continuation?)))
 
 (define apply-k
   (lambda (k v)
@@ -218,14 +220,17 @@
                                 env
                                 (eval-rands-k (app-proc-rands-k k v)
                                               env
-                                              (cdr rands)
-                                              '()))]
+                                              (cdr rands)))]
            [app-proc-rands-k (k proc-value)
                              (apply-proc proc-value v k)]
-           [eval-rands-k (k env head)
-                         (eval-exp head env (eval-rands-cons-k k v))]
-           [eval-rands-cons-k (k tail)
-                              (apply-k k (cons v tail))]
+           [eval-rands-k (k env tail)
+                         (if (null? tail)
+                             (apply-k k (list v))
+                             (eval-exp (car tail) env (eval-rands-k (eval-rands-cons-k k v)
+                                                                    env
+                                                                    (cdr tail))))]
+           [eval-rands-cons-k (k head)
+                              (apply-k k (cons head v))]
            [form-list-k (k head)
                         (apply-k k (cons head v))]
            [list-to-cutoff-k (k args env body)
@@ -235,4 +240,6 @@
            [map-k (k proc head)
                   (apply-proc proc (list head) (map-cons-k k v))]
            [map-cons-k (k tail)
-                       (apply-k k (cons v tail))])))
+                       (apply-k k (cons v tail))]
+           [deref-k (k)
+                    (apply-k k (deref v))])))

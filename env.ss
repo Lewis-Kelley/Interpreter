@@ -38,14 +38,13 @@
   (lambda (env sym succeed fail) ; succeed and fail are procedures applied if the var is or isn't found, respectively.
     (cases environment env
            (empty-env-record ()
-                             (fail))
+                             (apply-k fail))
            (extended-env-record (syms vals env)
                                 (let ((pos (list-find-position sym syms)))
                                   (if (number? pos)
-                                      (succeed (list-ref vals pos))
+                                      (apply-k succeed (list-ref vals pos))
                                       (apply-env-ref env sym succeed fail)))))))
 
 (define apply-env
   (lambda (env sym succeed fail)
-    (apply-env-ref env sym (lambda (x)
-                             (succeed (deref x))) fail)))
+    (apply-env-ref env sym (deref-k succeed) fail)))
