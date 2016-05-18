@@ -37,6 +37,7 @@
            [if-exp (test t-exp)
                    (eval-exp test env (if-else-k k env t-exp (app-exp (var-exp void) '())))]
            [app-exp (rator rands)
+                    ;(printf "In app-exp with rator ~s and rands ~s\n" rator rands)
                     (eval-exp rator env (app-exp-k k rands env))]
            [lambda-exp (pars body)
                        (apply-k k (closure pars body env))]
@@ -78,12 +79,14 @@
 
 (define apply-proc
   (lambda (proc-value args k)
+    ;(printf "In apply-proc with args ~s\n" args)
+    ;(printf "Apply-proc continuation ~s\n" k)
     (cases proc-val proc-value
            [prim-proc (op) (apply-prim-proc op args k)]
            [closure (pars body env)
-                    (eval-exp (car body) (extend-env (map car pars) (map ref args) env) (begin-k k (cdr body)))]
+                    (eval-exp (car body) (extend-env (map car pars) (map ref args) env) (begin-k k (cdr body) env))]
            [list-closure (pars body env)
-                         (eval-exp (car body) (extend-env (list pars) (list args) env) (begin-k k (cdr body)))]
+                         (eval-exp (car body) (extend-env (list pars) (list args) env) (begin-k k (cdr body) env))]
            [improper-list-closure (pars body env)
                           (i-list->list pars (list-to-cutoff-k k args env body))]
            [else (error 'apply-proc
@@ -195,10 +198,16 @@
        [(caddr) one-arg]
        [(cdddr) one-arg]
        [(map) (lambda (prim-proc args k)
+                (printf "In map with args ~s\n" args)
                 (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args))
                         (not (list? (2nd args))) (not (null? (cddr args))))
                     (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
-                    (prim-proc-map-cps (1st args) (cdr args) k)))]
+                    (apply-proc (1st args) 
+                                (list (1st (2nd args))) 
+                                (map-k k
+                                       (1st args) 
+                                       (cdr (2nd args))))))]
+                    ;(prim-proc-map-cps (1st args) (cdr args) k)))]
        [(apply) (lambda (prim-proc args k)
                   (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
                       (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
@@ -218,7 +227,7 @@
 (define prim-proc-map-cps
   (lambda (proc args k)
     (if (null? args)
-        (apply-k '())
+        (apply-k k '())
         (prim-proc-map-cps proc (cdr args) (map-k k proc (1st args))))))
 
 

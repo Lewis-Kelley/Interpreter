@@ -180,12 +180,14 @@
   (map-k
    (k continuation?)
    (proc proc-val?)
-   (head (lambda (x) #t)))
+   (tail (list-of (lambda (x) #t))))
   (map-cons-k
    (k continuation?)
-   (tail list?))
+   (head (lambda (x) #t)))
   (deref-k
-   (k continuation?)))
+   (k continuation?))
+  (cdr-k
+    (k continuation?)))
 
 (define apply-k
   (lambda (k v)
@@ -216,12 +218,15 @@
            [define-k (k sym env)
              (apply-k k (append-env sym (ref v)))]
            [app-exp-k (k rands env)
-                      (eval-exp (car rands)
-                                env
-                                (eval-rands-k (app-proc-rands-k k v)
-                                              env
-                                              (cdr rands)))]
+                      (if (null? rands)
+                        (apply-k (app-proc-rands-k k v) '())
+                        (eval-exp (car rands)
+                                  env
+                                  (eval-rands-k (app-proc-rands-k k v)
+                                                env
+                                                (cdr rands))))]
            [app-proc-rands-k (k proc-value)
+                             ; (printf "app-proc-rands-k v ~s\n" v)
                              (apply-proc proc-value v k)]
            [eval-rands-k (k env tail)
                          (if (null? tail)
@@ -237,9 +242,17 @@
                              (list-cutoff args (- (length v) 1) (cutoff-to-eval-k k env v body))]
            [cutoff-to-eval-k (k env pars body)
                              (eval-exp (car body) (extend-env pars v env) (begin-k k (cdr body)))]
-           [map-k (k proc head)
-                  (apply-proc proc (list head) (map-cons-k k v))]
-           [map-cons-k (k tail)
-                       (apply-k k (cons v tail))]
+           [map-k (k proc tail)
+                  (printf "map-k v ~s\n" v)
+                  (printf "map-k tail ~s\n" tail)
+                  (if (null? tail)
+                    (apply-k k (list v))
+                    (apply-proc proc (list (car tail)) (map-k (map-cons-k k v) proc (cdr tail))))]
+           [map-cons-k (k head)
+                       (apply-k k (cons head v))]
            [deref-k (k)
-                    (apply-k k (deref v))])))
+                    (apply-k k (deref v))]
+           [cdr-k (k)
+              (apply-k k (cdr v))])))
+
+
