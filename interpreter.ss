@@ -37,7 +37,7 @@
            [if-exp (test t-exp)
                    (eval-exp test env (if-else-k k env t-exp (app-exp (var-exp void) '())))]
            [app-exp (rator rands)
-                    ;(printf "In app-exp with rator ~s and rands ~s\n" rator rands)
+                    (printf "In app-exp with rator ~s\n" rator)
                     (eval-exp rator env (app-exp-k k rands env))]
            [lambda-exp (pars body)
                        (apply-k k (closure pars body env))]
@@ -84,7 +84,7 @@
     (cases proc-val proc-value
            [prim-proc (op) (apply-prim-proc op args k)]
            [closure (pars body env)
-                    (eval-exp (car body) (extend-env (map car pars) (map ref args) env) (begin-k k (cdr body) env))]
+                    (eval-exp (car body) (extend-env (map car pars) args env) (begin-k k (cdr body) env))]
            [list-closure (pars body env)
                          (eval-exp (car body) (extend-env (list pars) (list args) env) (begin-k k (cdr body) env))]
            [improper-list-closure (pars body env)
@@ -112,6 +112,7 @@
 (define arg-test
   (lambda (pred?)
     (lambda (sym args k)
+      (printf "In ~s with args ~s\n" sym args)
       (if (not (pred? args))
           (eopl:error 'apply-prim-proc "Invalid arguments to ~s: ~s" sym args)
           (apply-k k (apply (eval sym) args))))))
@@ -198,7 +199,6 @@
        [(caddr) one-arg]
        [(cdddr) one-arg]
        [(map) (lambda (prim-proc args k)
-                (printf "In map with args ~s\n" args)
                 (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args))
                         (not (list? (2nd args))) (not (null? (cddr args))))
                     (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)
