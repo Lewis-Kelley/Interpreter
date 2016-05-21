@@ -105,7 +105,8 @@
                               set-car! set-cdr! vector-set! display newline
                               caar cadr cdar cddr caaar caadr cadar cdaar
                               caddr cdadr cddar cdddr map apply member quotient
-                              eqv? append list-tail void display newline call/cc))
+                              eqv? append list-tail void display newline call/cc
+                              exit-list))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -229,6 +230,8 @@
                     (apply-proc (car args)
                                 (list (c-proc k))
                                 k))]
+       [(exit-list) (lambda (prim-proc args k)
+                      args)]
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
                          prim-proc)]) prim-proc args k)))
