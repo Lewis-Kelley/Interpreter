@@ -92,6 +92,8 @@
                            (eval-exp (car body) env (begin-k k (cdr body) env)))]
            [improper-list-closure (pars body env)
                           (i-list->list pars (list-to-cutoff-k k args env body))]
+           [c-proc (k)
+                    (apply-k k (car args))]
            [else (error 'apply-proc
                         "Attempt to apply bad procedure: ~s"
                         proc-value)])))
@@ -103,7 +105,7 @@
                               set-car! set-cdr! vector-set! display newline
                               caar cadr cdar cddr caaar caadr cadar cdaar
                               caddr cdadr cddar cdddr map apply member quotient
-                              eqv? append list-tail void display newline))
+                              eqv? append list-tail void display newline call/cc))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -223,6 +225,10 @@
        [(void) zero-arg]
        [(display) one-arg]
        [(newline) zero-arg]
+       [(call/cc) (lambda (prim-proc args k)
+                    (apply-proc (car args)
+                                (list (c-proc k))
+                                k))]
        [else (eopl:error 'apply-prim-proc
                          "Bad primitive procedure name: ~s"
                          prim-proc)]) prim-proc args k)))

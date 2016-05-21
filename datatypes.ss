@@ -93,7 +93,8 @@
   [improper-list-closure
    (pars improper-list-of-symbols?)
    (body (list-of expression?))
-   (env environment?)])
+   (env environment?)]
+  [c-proc (k continuation?)])
 
 
 
