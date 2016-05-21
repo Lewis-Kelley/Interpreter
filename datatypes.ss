@@ -169,7 +169,7 @@
    (head (lambda (x) #t)))
   (list-to-cutoff-k
    (k continuation?)
-   (args (list-of expression?))
+   (args (list-of (lambda (x) #t)))
    (env environment?)
    (body (list-of expression?)))
   (cutoff-to-eval-k
@@ -243,7 +243,7 @@
            [list-to-cutoff-k (k args env body)
                              (list-cutoff args (- (length v) 1) (cutoff-to-eval-k k env v body))]
            [cutoff-to-eval-k (k env pars body)
-                             (eval-exp (car body) (extend-env pars v env) (begin-k k (cdr body)))]
+                             (eval-exp (car body) (extend-env pars v env) (begin-k k (cdr body) (extend-env pars v env)))]
            [map-k (k proc tail)
                   (if (null? tail)
                     (apply-k k (list v))

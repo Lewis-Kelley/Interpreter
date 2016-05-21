@@ -68,7 +68,7 @@
   (lambda (i-list k)
     (if (pair? (cdr i-list))
         (i-list->list (cdr i-list) (form-list-k k (car i-list)))
-        (apply-k k i-list))))
+        (apply-k k (cons (car i-list) (list (cdr i-list)))))))
 
 ;; Takes a list and a target length. Returns the contents of
 ;; the list in a shortened list where there are len + 1 elements
