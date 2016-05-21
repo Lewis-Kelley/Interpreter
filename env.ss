@@ -48,7 +48,6 @@
                                       (apply-env-ref env sym succeed fail)))))))
 
 (define apply-env
-
   (lambda (env sym succeed fail)
     ;(printf "in apply-env\n")
     (apply-env-ref env sym (deref-k succeed) fail)))

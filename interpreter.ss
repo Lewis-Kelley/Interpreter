@@ -36,7 +36,7 @@
            [if-else-exp (test t-exp f-exp)
                         (eval-exp test env (if-else-k k env t-exp f-exp))]
            [if-exp (test t-exp)
-                   (eval-exp test env (if-else-k k env t-exp (app-exp (var-exp void) '())))]
+                   (eval-exp test env (if-else-k k env t-exp (app-exp (var-exp 'void) '())))]
            [app-exp (rator rands)
                     (eval-exp rator env (app-exp-k k rands env))]
            [lambda-exp (pars body)
@@ -48,7 +48,7 @@
            [set!-exp (id exp)
                      (apply-env-ref env id (apply-set-ref!-k k exp env) (error-k (format "Failed to lookup ~s" id)))]
            [define-exp (sym val)
-             (append-env env sym (box (eval-exp val env)))]
+             (eval-exp val env (define-k k sym env))]
            [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
 ;; evaluate the list of operands, putting results into a list

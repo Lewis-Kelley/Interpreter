@@ -216,7 +216,7 @@
            [eval-set-ref!-k (k var)
                             (apply-k k (set-ref! var v))]
            [define-k (k sym env)
-             (apply-k k (append-env sym (ref v)))]
+             (apply-k k (append-env env sym (ref v)))]
            [app-exp-k (k rands env)
                       ;;(printf "In app-exp-k with v = ~s\n\trands = ~s\n" v rands)
                       (if (null? rands)
