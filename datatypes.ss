@@ -218,7 +218,7 @@
            [define-k (k sym env)
              (apply-k k (append-env sym (ref v)))]
            [app-exp-k (k rands env)
-                      ;(printf "In app-exp-k with v = ~s\n\trands = ~s\n" v rands)
+                      ;;(printf "In app-exp-k with v = ~s\n\trands = ~s\n" v rands)
                       (if (null? rands)
                         (apply-k (app-proc-rands-k k v) '())
                         (eval-exp (car rands)

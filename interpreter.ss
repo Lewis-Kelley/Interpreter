@@ -15,7 +15,6 @@
 
 (define eval-exp
   (lambda (exp env k)
-    ;(printf "In eval-exp with exp ~s\n" exp)
     (cases expression exp
            [lit-exp (datum) (apply-k k datum)]
            [quote-exp (datum) (apply-k k (2nd datum))]
@@ -39,7 +38,6 @@
            [if-exp (test t-exp)
                    (eval-exp test env (if-else-k k env t-exp (app-exp (var-exp void) '())))]
            [app-exp (rator rands)
-                    ;(printf "In app-exp with rator ~s\n" rator)
                     (eval-exp rator env (app-exp-k k rands env))]
            [lambda-exp (pars body)
                        (apply-k k (closure pars body env))]
@@ -87,9 +85,11 @@
            [prim-proc (op) (apply-prim-proc op args k)]
            [closure (pars body env)
                     ;(printf "In closure with pars: ~s,\n body: ~s,\n and env: ~s\n" pars body env)
-                    (eval-exp (car body) (extend-env (map car pars) args env) (begin-k k (cdr body) (extend-env (map car pars) args env)))]
+                    (let ((env (extend-env (map car pars) args env)))
+                      (eval-exp (car body) env (begin-k k (cdr body) env)))]
            [list-closure (pars body env)
-                         (eval-exp (car body) (extend-env (list pars) (list args) env) (begin-k k (cdr body) (extend-env (list pars) (list args) env)))]
+                         (let ((env (extend-env (list pars) (list args) env)))
+                           (eval-exp (car body) env (begin-k k (cdr body) env)))]
            [improper-list-closure (pars body env)
                           (i-list->list pars (list-to-cutoff-k k args env body))]
            [else (error 'apply-proc
