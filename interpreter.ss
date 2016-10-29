@@ -29,7 +29,7 @@
                        (apply-k k #f)
                        (eval-exp (car exps) env (or-k k (cdr exps) env)))]
            [var-exp (id)
-                    ;(printf "in var-exp with id: ~s\n" id)
+                                        ;(printf "in var-exp with id: ~s\n" id)
                     (apply-env env id; look up its value.
                                k ; procedure to call if id is in the environment
                                (error-k (format "Failed to lookup ~s" id)))]
@@ -49,6 +49,8 @@
                      (apply-env-ref env id (apply-set-ref!-k k exp env) (error-k (format "Failed to lookup ~s" id)))]
            [define-exp (sym val)
              (eval-exp val env (define-k k sym env))]
+           [while-exp (test body)
+                      (eval-exp test env (test-while-k k exp env))]
            [else (eopl:error 'eval-exp "Bad abstract syntax: ~a" exp)])))
 
 ;; evaluate the list of operands, putting results into a list
@@ -79,21 +81,21 @@
 
 (define apply-proc
   (lambda (proc-value args k)
-    ;(printf "In apply-proc with args ~s\n" args)
-    ;(printf "Apply-proc continuation ~s\n" k)
+                                        ;(printf "In apply-proc with args ~s\n" args)
+                                        ;(printf "Apply-proc continuation ~s\n" k)
     (cases proc-val proc-value
            [prim-proc (op) (apply-prim-proc op args k)]
            [closure (pars body env)
-                    ;(printf "In closure with pars: ~s,\n body: ~s,\n and env: ~s\n" pars body env)
+                                        ;(printf "In closure with pars: ~s,\n body: ~s,\n and env: ~s\n" pars body env)
                     (let ((env (extend-env (map car pars) args env)))
                       (eval-exp (car body) env (begin-k k (cdr body) env)))]
            [list-closure (pars body env)
                          (let ((env (extend-env (list pars) (list args) env)))
                            (eval-exp (car body) env (begin-k k (cdr body) env)))]
            [improper-list-closure (pars body env)
-                          (i-list->list pars (list-to-cutoff-k k args env body))]
+                                  (i-list->list pars (list-to-cutoff-k k args env body))]
            [c-proc (k)
-                    (apply-k k (car args))]
+                   (apply-k k (car args))]
            [else (error 'apply-proc
                         "Attempt to apply bad procedure: ~s"
                         proc-value)])))
@@ -106,7 +108,7 @@
                               caar cadr cdar cddr caaar caadr cadar cdaar
                               caddr cdadr cddar cdddr map apply member quotient
                               eqv? append list-tail void display newline call/cc
-                              exit-list))
+                              exit-list continue))
 
 (define init-env         ; for now, our initial global environment only contains
   (extend-env            ; procedure names.  Recall that an environment associates
@@ -118,7 +120,7 @@
 (define arg-test
   (lambda (pred?)
     (lambda (sym args k)
-      ;(printf "In ~s with args ~s\n" sym args)
+                                        ;(printf "In ~s with args ~s\n" sym args)
       (if (not (pred? args))
           (eopl:error 'apply-prim-proc "Invalid arguments to ~s: ~s" sym args)
           (apply-k k (apply (eval sym) args))))))
@@ -150,6 +152,8 @@
 (define apply-prim-proc
   (lambda (prim-proc args k)
     ((case prim-proc
+       [(continue) (lambda (prim-proc args k)
+                     (eat-loop k))]
        [(+) any-arg]
        [(-) non-zero-arg]
        [(*) any-arg]
@@ -213,7 +217,7 @@
                                 (map-k k
                                        (1st args) 
                                        (cdr (2nd args))))))]
-                    ;(prim-proc-map-cps (1st args) (cdr args) k)))]
+                                        ;(prim-proc-map-cps (1st args) (cdr args) k)))]
        [(apply) (lambda (prim-proc args k)
                   (if (or (null? args) (not (proc-val? (1st args))) (null? (cdr args)) (not (list? (2nd args))) (not (null? (cddr args))))
                       (eopl:error "Invalid arguments to ~s: ~s" prim-proc args)

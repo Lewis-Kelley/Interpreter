@@ -121,6 +121,14 @@
 
 (define-datatype continuation continuation?
   (empty-k)
+  (test-while-k
+   (k continuation?)
+   (exp (lambda (x) (equal? (car x) 'while-exp)))
+   (env environment?))
+  (while-k
+   (k continuation?)
+   (exps (list-of expression?))
+   (env environment?))
   (begin-k
    (k continuation?)
    (exps (list-of expression?))
@@ -188,11 +196,33 @@
   (deref-k
    (k continuation?))
   (cdr-k
-    (k continuation?)))
+   (k continuation?)))
+
+(define eat-loop
+  (lambda (k)
+    (cases continuation k
+           (while-k (k exps env)
+                    (apply-k k #f))
+           (else
+            (eopl:error 'eat-loop "not in while-k")))))
+
 
 (define apply-k
   (lambda (k v)
     (cases continuation k
+           [test-while-k (k exp env)
+                         (if v
+                             (cases expression exp
+                                    (while-exp (test body)
+                                               (eval-exp (car body) env
+                                                         (while-k k
+                                                                  (append (cdr body) (list exp))
+                                                                  env)))
+                                    (else (eopl:error 'apply-k "Error in while"))))]
+           [while-k (k exps env)
+                    (if (null? exps)
+                        (apply-k k v)
+                        (eval-exp (car exps) env (while-k k (cdr exps) env)))]
            [empty-k () v]
            [begin-k (k exps env)
                     (if (null? exps)
@@ -221,17 +251,17 @@
            [app-exp-k (k rands env)
                       ;;(printf "In app-exp-k with v = ~s\n\trands = ~s\n" v rands)
                       (if (null? rands)
-                        (apply-k (app-proc-rands-k k v) '())
-                        (eval-exp (car rands)
-                                  env
-                                  (eval-rands-k (app-proc-rands-k k v)
-                                                env
-                                                (cdr rands))))]
+                          (apply-k (app-proc-rands-k k v) '())
+                          (eval-exp (car rands)
+                                    env
+                                    (eval-rands-k (app-proc-rands-k k v)
+                                                  env
+                                                  (cdr rands))))]
            [app-proc-rands-k (k proc-value)
-                              ;(printf "In app-proc-rands-k with proc-value: ~s\n" proc-value)
+                                        ;(printf "In app-proc-rands-k with proc-value: ~s\n" proc-value)
                              (apply-proc proc-value v k)]
            [eval-rands-k (k env tail)
-                          ;(printf "In eval-rands-k with tail: ~s\n" tail)
+                                        ;(printf "In eval-rands-k with tail: ~s\n" tail)
                          (if (null? tail)
                              (apply-k k (list v))
                              (eval-exp (car tail) env (eval-rands-k (eval-rands-cons-k k v)
@@ -247,13 +277,13 @@
                              (eval-exp (car body) (extend-env pars v env) (begin-k k (cdr body) (extend-env pars v env)))]
            [map-k (k proc tail)
                   (if (null? tail)
-                    (apply-k k (list v))
-                    (apply-proc proc (list (car tail)) (map-k (map-cons-k k v) proc (cdr tail))))]
+                      (apply-k k (list v))
+                      (apply-proc proc (list (car tail)) (map-k (map-cons-k k v) proc (cdr tail))))]
            [map-cons-k (k head)
                        (apply-k k (cons head v))]
            [deref-k (k)
                     (apply-k k (deref v))]
            [cdr-k (k)
-              (apply-k k (cdr v))])))
+                  (apply-k k (cdr v))])))
 
 

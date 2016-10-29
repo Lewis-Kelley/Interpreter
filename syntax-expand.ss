@@ -88,12 +88,7 @@
                                      (improper-pars-lambda-exp pars
                                                                (map syntax-expand body))]
            [while-exp (test bodies)
-                      (syntax-expand 
-                        (named-let-exp 'loop
-                                     '()
-                                     '()
-                                     (list (if-exp test 
-                                             (begin-exp (append bodies (list (app-exp (var-exp 'loop) '()))))))))]
+                      (while-exp (syntax-expand test) (map syntax-expand bodies))]
            [set!-exp (id exp)
                      (set!-exp
                       id
